@@ -1,5 +1,6 @@
-// api/src/auth/auth.service.ts
 
+import { LoginDto } from './dto/login.dto';
+import { UnauthorizedException } from '@nestjs/common';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -33,4 +34,28 @@ export class AuthService {
     const { password, ...result } = user;
     return result;
   }
+  
+  async login(loginDto: LoginDto) {
+  // 1. Encontra o usuário pelo email
+  const user = await this.usersService.findOneByEmail(loginDto.email);
+  if (!user) {
+    throw new UnauthorizedException('Credenciais inválidas.');
+  }
+
+  // 2. Compara a senha enviada com a senha do banco
+  const isPasswordMatching = await bcrypt.compare(
+    loginDto.password,
+    user.password,
+  );
+
+  if (!isPasswordMatching) {
+    throw new UnauthorizedException('Credenciais inválidas.');
+  }
+
+  // 3. Se a senha estiver correta, gera o token JWT
+  const payload = { sub: user.id, email: user.email };
+  return {
+    access_token: await this.jwtService.signAsync(payload),
+  };
+}
 }
