@@ -1,28 +1,36 @@
+// api/src/users/entities/user.entity.ts
+import { Book } from '../../books/entities/book.entity'; // 1. IMPORTE A ENTIDADE BOOK
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Entity,
+  OneToMany, // 2. IMPORTE O ONETOMANY
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'users' }) // Isso diz ao TypeORM que esta classe é um modelo para a tabela 'users'
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid') // Define a chave primária como um UUID (um ID longo e único)
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column() // Define uma coluna para o nome do usuário
+  @Column()
   name: string;
 
-  @Column({ unique: true }) // Define a coluna de email e garante que cada email seja único no banco
+  @Column({ unique: true })
   email: string;
 
-  @Column() // Define a coluna para a senha (armazenaremos a senha criptografada aqui)
+  @Column()
   password: string;
 
-  @CreateDateColumn({ name: 'created_at' }) // Cria uma coluna que registra a data de criação automaticamente
+  // 3. ADICIONE O RELACIONAMENTO
+  // Relacionamento: UM usuário pode ter MUITOS livros.
+  @OneToMany(() => Book, (book) => book.user)
+  books: Book[];
+
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' }) // Cria uma coluna que atualiza a data a cada modificação
+  @UpdateDateColumn()
   updatedAt: Date;
 }
