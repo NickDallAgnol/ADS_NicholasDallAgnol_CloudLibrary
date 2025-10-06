@@ -1,14 +1,16 @@
 // api/src/books/books.module.ts
+// src/books/books.module.ts
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // Importe TypeOrmModule
-import { BooksService } from './books.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { BooksController } from './books.controller';
+import { BooksService } from './books.service';
 import { Book } from './entities/book.entity';
-import { User } from '../users/entities/user.entity'; // Importe a entidade User
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Book, User])], // Adicione Book E User aos repositórios
+  imports: [TypeOrmModule.forFeature([Book])],
   controllers: [BooksController],
   providers: [BooksService],
+  exports: [BooksService], // opcional, útil se outro módulo precisar do service
 })
 export class BooksModule {}

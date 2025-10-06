@@ -1,27 +1,26 @@
-// api/src/auth/strategy/jwt.strategy.ts
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
+// src/auth/strategy/jwt.strategy.ts
+// src/auth/strategy/jwt.strategy.ts
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config'; // Importação necessária
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
 
-export interface JwtPayload {
-  sub: string;
-  email: string;
-}
+type JwtPayload = { sub: string; email: string };
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  // O ConfigService é injetado aqui pelo NestJS
-  constructor(private configService: ConfigService) {
-    // Agora, o configService é uma instância válida e pode chamar o método .get()
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      // >>> chave certa e non-null assertion <<<
       secretOrKey: configService.get<string>('JWT_SECRET')!,
+      // Se preferir, pode usar: secretOrKey: process.env.JWT_SECRET
     });
   }
 
   async validate(payload: JwtPayload) {
-    return { userId: payload.sub, email: payload.email };
+    // o que cai em request.user
+    return { sub: payload.sub, email: payload.email };
   }
 }

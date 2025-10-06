@@ -1,32 +1,30 @@
-// api/src/auth/auth.module.ts
+// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt'; // Certifique-se que JwtModule está importado
-import { ConfigModule, ConfigService } from '@nestjs/config'; // Certifique-se que ConfigModule e ConfigService estão importados
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    UsersModule,
+    ConfigModule,           // <- pode omitir se já está global em AppModule
     PassportModule,
-    // **Este bloco é crucial para o JWT_SECRET**
     JwtModule.registerAsync({
-      imports: [ConfigModule], // Precisa importar o ConfigModule aqui também
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET')!, // Usar ! para garantir que é string
-        signOptions: { expiresIn: '60m' },
+      imports: [ConfigModule],
+      inject: [ConfigService],                       // <— AQUI
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET')!,   // ou config.get('JWT_SECRET') ?? 'dev-secret'
+        signOptions: { expiresIn: '1h' },
       }),
-      inject: [ConfigService], // Dizer ao NestJS para injetar o ConfigService
     }),
-    // Não é necessário importar ConfigModule aqui se já é global
-    // mas é boa prática para clareza em módulos que dependem dele fortemente.
-    // ConfigModule,
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService], // Exporte AuthService caso precise ser usado em outros módulos
+  exports: [AuthService],
 })
 export class AuthModule {}

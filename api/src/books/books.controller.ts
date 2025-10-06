@@ -1,4 +1,4 @@
-// api/src/books/books.controller.ts
+// src/books/books.controller.ts
 import {
   Controller,
   Get,
@@ -7,46 +7,62 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards, // Importe UseGuards
-  Request,   // Importe Request
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
+import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt/jwt.guard'; // Importe nosso guarda
+import { QueryBooksDto } from './dto/query-books.dto';
+import { UserId } from '../auth/decorators/user-id.decorator';
 
-@UseGuards(JwtAuthGuard) // 1. Aplica o guarda a TODAS as rotas deste controller
+@UseGuards(JwtAuthGuard)
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(private readonly service: BooksService) {}
 
-  // Rota para CRIAR um novo livro
+  /**
+   * Cria um novo livro vinculado ao usuário logado.
+   */
   @Post()
-  create(@Body() createBookDto: CreateBookDto, @Request() req) {
-    // 2. Extrai o ID do usuário do token (anexado pelo JwtAuthGuard)
-    const userId = req.user.userId;
-
-    // 3. Chama o serviço, passando os dados do livro e o ID do usuário
-    return this.booksService.create(createBookDto, userId);
+  create(@UserId() userId: string, @Body() dto: CreateBookDto) {
+    return this.service.create(userId, dto);
   }
 
+  /**
+   * Lista todos os livros do usuário logado (com filtros e paginação).
+   */
   @Get()
-  findAll() {
-    return this.booksService.findAll();
+  findAll(@UserId() userId: string, @Query() query: QueryBooksDto) {
+    return this.service.findAll(userId, query);
   }
 
+  /**
+   * Retorna os dados de um livro específico.
+   */
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.booksService.findOne(+id);
+  findOne(@UserId() userId: string, @Param('id') id: string) {
+    return this.service.findOne(userId, id);
   }
 
+  /**
+   * Atualiza um livro do usuário.
+   */
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBookDto: UpdateBookDto) {
-    return this.booksService.update(+id, updateBookDto);
+  update(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateBookDto,
+  ) {
+    return this.service.update(userId, id, dto);
   }
 
+  /**
+   * Remove um livro do usuário.
+   */
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.booksService.remove(+id);
+  remove(@UserId() userId: string, @Param('id') id: string) {
+    return this.service.remove(userId, id);
   }
 }
