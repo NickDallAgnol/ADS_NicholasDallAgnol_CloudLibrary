@@ -1,35 +1,31 @@
 // src/books/dto/create-book.dto.ts
-import { IsInt, IsOptional, IsString, IsEnum, IsDateString, Min, MaxLength } from 'class-validator';
-
-export enum StatusLeitura {
-  LER = 'LER',
-  LENDO = 'LENDO',
-  LIDO = 'LIDO',
-  ABANDONADO = 'ABANDONADO',
-}
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import { ReadingStatus } from '../entities/book.entity';
 
 export class CreateBookDto {
-  @IsString() @MaxLength(200)
+  @IsString()
+  @IsNotEmpty()
   title: string;
 
-  @IsString() @MaxLength(120)
+  @IsString()
+  @IsNotEmpty()
   author: string;
 
-  @IsOptional() @IsString() @MaxLength(120)
+  @IsString()
+  @IsOptional()
   publisher?: string;
 
-  @IsOptional() @IsString() @MaxLength(80)
-  category?: string;
+  @IsString()
+  @IsOptional()
+  genre?: string;
 
-  @IsOptional() @IsEnum(StatusLeitura)
-  status?: StatusLeitura;
+  @IsEnum(ReadingStatus)
+  @IsOptional()
+  status?: ReadingStatus;
 
-  @IsOptional() @IsInt() @Min(1)
-  pages?: number;
-
-  @IsOptional() @IsDateString()
-  startedAt?: string;
-
-  @IsOptional() @IsDateString()
-  finishedAt?: string;
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  progress?: number;
 }

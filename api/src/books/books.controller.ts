@@ -7,62 +7,47 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   UseGuards,
+  Request,
+  Query,
 } from '@nestjs/common';
-import { BooksService } from './books.service';
 import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
+import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { QueryBooksDto } from './dto/query-books.dto';
-import { UserId } from '../auth/decorators/user-id.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('books')
 export class BooksController {
-  constructor(private readonly service: BooksService) {}
+  constructor(private readonly booksService: BooksService) {}
 
-  /**
-   * Cria um novo livro vinculado ao usuário logado.
-   */
   @Post()
-  create(@UserId() userId: string, @Body() dto: CreateBookDto) {
-    return this.service.create(userId, dto);
+  async create(@Body() createBookDto: CreateBookDto, @Request() req) {
+    return this.booksService.create(createBookDto, req.user.userId);
   }
 
-  /**
-   * Lista todos os livros do usuário logado (com filtros e paginação).
-   */
   @Get()
-  findAll(@UserId() userId: string, @Query() query: QueryBooksDto) {
-    return this.service.findAll(userId, query);
+  async findAll(@Request() req, @Query() query: QueryBooksDto) {
+    return this.booksService.findAllByUser(req.user.userId, query);
   }
 
-  /**
-   * Retorna os dados de um livro específico.
-   */
   @Get(':id')
-  findOne(@UserId() userId: string, @Param('id') id: string) {
-    return this.service.findOne(userId, id);
+  async findOne(@Param('id') id: string, @Request() req) {
+    return this.booksService.findOneByUser(+id, req.user.userId);
   }
 
-  /**
-   * Atualiza um livro do usuário.
-   */
   @Patch(':id')
-  update(
-    @UserId() userId: string,
+  async update(
     @Param('id') id: string,
-    @Body() dto: UpdateBookDto,
+    @Body() updateBookDto: UpdateBookDto,
+    @Request() req,
   ) {
-    return this.service.update(userId, id, dto);
+    return this.booksService.update(+id, req.user.userId, updateBookDto);
   }
 
-  /**
-   * Remove um livro do usuário.
-   */
   @Delete(':id')
-  remove(@UserId() userId: string, @Param('id') id: string) {
-    return this.service.remove(userId, id);
+  async remove(@Param('id') id: string, @Request() req) {
+    return this.booksService.remove(+id, req.user.userId);
   }
 }

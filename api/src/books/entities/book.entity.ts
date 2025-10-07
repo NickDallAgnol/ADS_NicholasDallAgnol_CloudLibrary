@@ -1,43 +1,54 @@
 // src/books/entities/book.entity.ts
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, Index } from 'typeorm';
+// src/books/entities/book.entity.ts
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { StatusLeitura } from '../dto/create-book.dto';
+
+export enum ReadingStatus {
+  TO_READ = 'A LER',
+  READING = 'LENDO',
+  READ = 'LIDO',
+}
 
 @Entity('books')
-@Index(['user', 'title'])
 export class Book {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ length: 200 })
+  @Column({ length: 255 })
   title: string;
 
-  @Column({ length: 120 })
+  @Column({ length: 255 })
   author: string;
 
-  @Column({ length: 120, nullable: true })
-  publisher?: string;
+  @Column({ length: 255, nullable: true })
+  publisher: string;
 
-  @Column({ length: 80, nullable: true })
-  category?: string;
+  @Column({ length: 100, nullable: true })
+  genre: string;
 
-  @Column({ type: 'enum', enum: StatusLeitura, default: StatusLeitura.LER })
-  status: StatusLeitura;
+  @Column({
+    type: 'enum',
+    enum: ReadingStatus,
+    default: ReadingStatus.TO_READ,
+  })
+  status: ReadingStatus;
 
-  @Column({ type: 'int', nullable: true })
-  pages?: number;
+  @Column({ type: 'int', default: 0 })
+  progress: number; // percentual de leitura (0–100)
 
-  @Column({ type: 'date', nullable: true })
-  startedAt?: string;
-
-  @Column({ type: 'date', nullable: true })
-  finishedAt?: string;
-
-  @ManyToOne(() => User, (u) => u.books, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.books, { onDelete: 'CASCADE' })
   user: User;
 
   @CreateDateColumn()
   createdAt: Date;
+
   @UpdateDateColumn()
   updatedAt: Date;
 }
