@@ -1,4 +1,4 @@
-// src/books/books.controller.ts
+// api/src/books/books.controller.ts
 import {
   Controller,
   Get,
@@ -7,47 +7,58 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
-  Request,
   Query,
+  UseGuards,
+  Req,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { QueryBooksDto } from './dto/query-books.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard)
 @Controller('books')
+@UseGuards(JwtAuthGuard) // todas as rotas exigem autenticação
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
+  // Criar livro
   @Post()
-  async create(@Body() createBookDto: CreateBookDto, @Request() req) {
-    return this.booksService.create(createBookDto, req.user.userId);
+  create(@Req() req, @Body() dto: CreateBookDto) {
+    return this.booksService.create(req.user.id, dto);
   }
 
+  // Listar livros com filtros, paginação e ordenação
   @Get()
-  async findAll(@Request() req, @Query() query: QueryBooksDto) {
-    return this.booksService.findAllByUser(req.user.userId, query);
+  findAll(@Req() req, @Query() query: any) {
+    return this.booksService.findAll(req.user.id, query);
   }
 
+  // Buscar livro por ID
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
-    return this.booksService.findOneByUser(+id, req.user.userId);
+  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.booksService.findOne(req.user.id, id);
   }
 
+  // Atualizar livro
   @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateBookDto: UpdateBookDto,
-    @Request() req,
+  update(
+    @Req() req,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBookDto,
   ) {
-    return this.booksService.update(+id, req.user.userId, updateBookDto);
+    return this.booksService.update(req.user.id, id, dto);
   }
 
+  // Deletar livro
   @Delete(':id')
-  async remove(@Param('id') id: string, @Request() req) {
-    return this.booksService.remove(+id, req.user.userId);
+  remove(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.booksService.remove(req.user.id, id);
+  }
+
+  // Estatísticas do usuário
+  @Get('stats')
+  getStats(@Req() req) {
+    return this.booksService.getStats(req.user.id);
   }
 }

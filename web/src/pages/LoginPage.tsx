@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import toast from 'react-hot-toast';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,15 +15,13 @@ export function LoginPage() {
       const response = await api.post('/auth/login', { email, password });
       const { access_token } = response.data;
 
-      // Guarda o token no "cofre" do navegador (LocalStorage)
       localStorage.setItem('authToken', access_token);
 
-      // Redireciona o usuário para a página de dashboard
+      toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
-
     } catch (error) {
       console.error(error);
-      alert('Erro ao realizar o login. Verifique suas credenciais.');
+      toast.error('Erro ao realizar o login. Verifique suas credenciais.');
     }
   }
 

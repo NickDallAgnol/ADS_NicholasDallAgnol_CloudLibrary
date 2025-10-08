@@ -1,6 +1,5 @@
 // src/books/dto/create-book.dto.ts
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
-import { ReadingStatus } from '../entities/book.entity';
 
 export class CreateBookDto {
   @IsString()
@@ -12,16 +11,16 @@ export class CreateBookDto {
   author: string;
 
   @IsString()
-  @IsOptional()
-  publisher?: string;
+  @IsNotEmpty()
+  publisher: string; // agora obrigatório
 
   @IsString()
   @IsOptional()
   genre?: string;
 
-  @IsEnum(ReadingStatus)
+  @IsString()
   @IsOptional()
-  status?: ReadingStatus;
+  status?: string; // como no schema é String, não enum
 
   @IsInt()
   @Min(0)

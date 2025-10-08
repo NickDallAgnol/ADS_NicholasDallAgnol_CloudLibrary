@@ -1,88 +1,133 @@
 // src/books/books.service.ts
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
-
-import { Book } from './entities/book.entity';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { QueryBooksDto } from './dto/query-books.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class BooksService {
-  constructor(
-    @InjectRepository(Book)
-    private readonly booksRepository: Repository<Book>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(createBookDto: CreateBookDto, userId: number): Promise<Book> {
-    const book = this.booksRepository.create({
-      ...createBookDto,
-      user: { id: userId } as any, // 👈 cast para evitar erro TS
+  private readonly allowedSortFields: string[] = [
+    'id',
+    'title',
+    'author',
+    'status',
+    'progress',
+  ];
+
+  async create(userId: number, dto: CreateBookDto) {
+    return this.prisma.book.create({
+      data: {
+        title: dto.title,
+        author: dto.author,
+        publisher: dto.publisher, // obrigatório
+        genre: dto.genre ?? null,
+        status: dto.status ?? 'A LER',
+        progress: dto.progress ?? 0,
+        userId,
+      },
     });
-    return this.booksRepository.save(book);
   }
 
-  async findAllByUser(userId: number, query: QueryBooksDto) {
-    const { q, category, status, page = 1, limit = 10 } = query;
+  async findAll(
+    userId: number,
+    query: {
+      q?: string;
+      status?: string;
+      page?: number | string;
+      limit?: number | string;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc' | string;
+    },
+  ) {
+    const q = query.q?.trim();
+    const status = query.status?.trim();
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
+    const sortByRaw = (query.sortBy ?? 'title').trim();
+    const sortOrder: Prisma.SortOrder =
+      query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
 
-    const where: any = { user: { id: userId } as any };
+    if (!Number.isFinite(page) || page < 1) {
+      throw new BadRequestException('Parâmetro "page" inválido');
+    }
+    if (!Number.isFinite(limit) || limit < 1 || limit > 100) {
+      throw new BadRequestException('Parâmetro "limit" inválido (1–100)');
+    }
 
+    const sortBy = this.allowedSortFields.includes(sortByRaw)
+      ? sortByRaw
+      : 'title';
+
+    const where: Prisma.BookWhereInput = { userId: userId };
+    if (status) where.status = status;
     if (q) {
-      // busca por título OU autor
-      where.title = ILike(`%${q}%`);
-      // se quiser buscar também por autor, pode usar QueryBuilder
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { author: { contains: q, mode: 'insensitive' } },
+      ];
     }
 
-    if (category) {
-      where.genre = ILike(`%${category}%`);
-    }
-
-    if (status) {
-      where.status = status;
-    }
-
-    const [items, total] = await this.booksRepository.findAndCount({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.book.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder } as any,
+      }),
+      this.prisma.book.count({ where }),
+    ]);
 
     return {
-      data: items,
+      data,
       total,
       page,
-      limit,
       totalPages: Math.ceil(total / limit),
     };
   }
 
-  async findOneByUser(id: number, userId: number): Promise<Book> {
-    const book = await this.booksRepository.findOne({
-      where: { id, user: { id: userId } as any },
+  async findOne(userId: number, id: number) {
+    const book = await this.prisma.book.findFirst({
+      where: { id, userId },
     });
-    if (!book) {
-      throw new NotFoundException('Livro não encontrado');
-    }
+    if (!book) throw new NotFoundException('Livro não encontrado');
     return book;
   }
 
-  async update(
-    id: number,
-    userId: number,
-    updateBookDto: UpdateBookDto,
-  ): Promise<Book> {
-    const book = await this.findOneByUser(id, userId);
-    Object.assign(book, updateBookDto);
-    return this.booksRepository.save(book);
+  async update(userId: number, id: number, dto: UpdateBookDto) {
+    await this.findOne(userId, id);
+
+    const data: Prisma.BookUpdateInput = {};
+    if (dto.title !== undefined) data.title = { set: dto.title };
+    if (dto.author !== undefined) data.author = { set: dto.author };
+    if (dto.publisher !== undefined) data.publisher = { set: dto.publisher };
+    if (dto.genre !== undefined) data.genre = { set: dto.genre };
+    if (dto.status !== undefined) data.status = { set: dto.status };
+    if (dto.progress !== undefined) data.progress = { set: dto.progress };
+
+    return this.prisma.book.update({
+      where: { id },
+      data,
+    });
   }
 
-  async remove(id: number, userId: number): Promise<void> {
-    const book = await this.findOneByUser(id, userId);
-    await this.booksRepository.remove(book);
+  async remove(userId: number, id: number) {
+    await this.findOne(userId, id);
+    return this.prisma.book.delete({
+      where: { id },
+    });
+  }
+
+  async getStats(userId: number) {
+    const [total, toRead, reading, read] = await Promise.all([
+      this.prisma.book.count({ where: { userId } }),
+      this.prisma.book.count({ where: { userId, status: 'A LER' } }),
+      this.prisma.book.count({ where: { userId, status: 'LENDO' } }),
+      this.prisma.book.count({ where: { userId, status: 'LIDO' } }),
+    ]);
+
+    return { total, toRead, reading, read };
   }
 }
