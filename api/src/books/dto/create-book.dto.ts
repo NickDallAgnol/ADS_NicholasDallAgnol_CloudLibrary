@@ -1,30 +1,39 @@
-// src/books/dto/create-book.dto.ts
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+// api/src/books/dto/create-book.dto.ts
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsEnum } from 'class-validator';
+import { Type } from 'class-transformer';
+
+// Definição dos status possíveis para um livro
+export enum BookStatus {
+  TO_READ = 'A LER',
+  READING = 'LENDO',
+  READ = 'LIDO',
+}
 
 export class CreateBookDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'O título é obrigatório.' })
   title: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'O autor é obrigatório.' })
   author: string;
 
   @IsString()
-  @IsNotEmpty()
-  publisher: string; // agora obrigatório
+  @IsNotEmpty({ message: 'A editora é obrigatória.' })
+  publisher: string; // Editora é agora obrigatória
 
-  @IsString()
   @IsOptional()
+  @IsString()
   genre?: string;
 
-  @IsString()
   @IsOptional()
-  status?: string; // como no schema é String, não enum
+  @IsEnum(BookStatus, { message: 'Status do livro inválido. Use "A LER", "LENDO" ou "LIDO".' })
+  status?: BookStatus; // O status pode ser opcional, com um valor padrão no serviço/entidade
 
-  @IsInt()
-  @Min(0)
-  @Max(100)
   @IsOptional()
+  @IsInt({ message: 'O progresso deve ser um número inteiro.' })
+  @Min(0, { message: 'O progresso mínimo é 0.' })
+  @Max(100, { message: 'O progresso máximo é 100.' })
+  @Type(() => Number) // Garante que o valor seja transformado em número
   progress?: number;
 }

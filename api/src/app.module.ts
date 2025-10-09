@@ -1,42 +1,36 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    // Carrega o .env e deixa disponível globalmente
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
+    // Configuração do TypeORM usando variáveis do .env
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const databaseUrl = config.get<string>('DATABASE_URL');
-        return databaseUrl
-          ? {
-              type: 'postgres',
-              url: databaseUrl,
-              autoLoadEntities: true,
-              synchronize: true, // só em DEV; em PROD usar migrations
-            }
-          : {
-              type: 'postgres',
-              host: config.get('DB_HOST', 'localhost'),
-              port: parseInt(config.get('DB_PORT', '5432')),
-              username: config.get('DB_USER', 'postgres'),
-              password: config.get('DB_PASSWORD', 'masterkey'),
-              database: config.get('DB_NAME', 'cloudlibrary_db'),
-              autoLoadEntities: true,
-              synchronize: true, // só em DEV
-            };
-      },
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: config.get<number>('DB_PORT'),
+        username: config.get<string>('DB_USERNAME'),
+        password: config.get<string>('DB_PASSWORD'),
+        database: config.get<string>('DB_DATABASE'),
+        autoLoadEntities: true,
+        synchronize: true, // ⚠️ Em produção, use migrations
+      }),
     }),
-    AuthModule,
-    UsersModule,
+
     BooksModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

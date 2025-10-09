@@ -1,11 +1,13 @@
-// api/src/users/entities/user.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Book } from '../../books/entities/book.entity';
 
-@Entity('users')
+@Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
 
   @Column({ unique: true })
   email: string;
@@ -13,6 +15,6 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Book, (b) => b.user)
+  @OneToMany(() => Book, (book) => book.user)
   books: Book[];
 }

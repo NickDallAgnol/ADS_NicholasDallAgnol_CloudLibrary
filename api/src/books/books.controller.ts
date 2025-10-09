@@ -1,4 +1,3 @@
-// api/src/books/books.controller.ts
 import {
   Controller,
   Get,
@@ -7,10 +6,9 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   UseGuards,
-  Req,
-  ParseIntPipe,
+  Request,
+  Query,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -18,47 +16,41 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 
 @Controller('books')
-@UseGuards(JwtAuthGuard) // todas as rotas exigem autenticação
+@UseGuards(JwtAuthGuard) // 🔒 protege todas as rotas
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
-  // Criar livro
   @Post()
-  create(@Req() req, @Body() dto: CreateBookDto) {
-    return this.booksService.create(req.user.id, dto);
+  create(@Request() req, @Body() dto: CreateBookDto) {
+    return this.booksService.create(req.user.userId, dto);
   }
 
-  // Listar livros com filtros, paginação e ordenação
   @Get()
-  findAll(@Req() req, @Query() query: any) {
-    return this.booksService.findAll(req.user.id, query);
+  findAll(@Request() req, @Query() query: any) {
+    return this.booksService.findAll(req.user.userId, query);
   }
 
-  // Buscar livro por ID
+  @Get('stats')
+  getStats(@Request() req) {
+    return this.booksService.getStats(req.user.userId);
+  }
+
   @Get(':id')
-  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
-    return this.booksService.findOne(req.user.id, id);
+  findOne(@Request() req, @Param('id') id: string) {
+    return this.booksService.findOne(req.user.userId, Number(id));
   }
 
-  // Atualizar livro
   @Patch(':id')
   update(
-    @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+    @Param('id') id: string,
     @Body() dto: UpdateBookDto,
   ) {
-    return this.booksService.update(req.user.id, id, dto);
+    return this.booksService.update(req.user.userId, Number(id), dto);
   }
 
-  // Deletar livro
   @Delete(':id')
-  remove(@Req() req, @Param('id', ParseIntPipe) id: number) {
-    return this.booksService.remove(req.user.id, id);
-  }
-
-  // Estatísticas do usuário
-  @Get('stats')
-  getStats(@Req() req) {
-    return this.booksService.getStats(req.user.id);
+  remove(@Request() req, @Param('id') id: string) {
+    return this.booksService.remove(req.user.userId, Number(id));
   }
 }
