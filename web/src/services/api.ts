@@ -1,4 +1,4 @@
-// web/src/services/api.ts
+// src/services/api.ts
 import axios from 'axios';
 
 export const api = axios.create({
@@ -12,3 +12,5 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export default api;

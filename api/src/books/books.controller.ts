@@ -21,9 +21,10 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
-  create(@Request() req, @Body() dto: CreateBookDto) {
-    return this.booksService.create(req.user.userId, dto);
-  }
+create(@Request() req, @Body() dto: CreateBookDto) {
+  console.log('>>> req.user no controller:', req.user); // 👀 debug
+  return this.booksService.create(req.user.userId, dto);
+}
 
   @Get()
   findAll(@Request() req, @Query() query: any) {

@@ -1,8 +1,5 @@
 // src/api/books.ts
-import axios from 'axios';
-
-// URL base da API (ajuste se necessário)
-const API_URL = 'http://localhost:3000/books';
+import { api } from '../services/api';
 
 // Tipagem do Livro (espelhando o backend)
 export interface Book {
@@ -39,36 +36,52 @@ export interface QueryBooksDto {
   limit?: number;
 }
 
+// Tipagem para resposta paginada
+export interface PaginatedBooks {
+  data: Book[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Tipagem para estatísticas
+export interface BooksStats {
+  total: number;
+  toRead: number;
+  reading: number;
+  read: number;
+}
+
 // Funções de API
 export const BooksAPI = {
   async getBooks(params?: QueryBooksDto) {
-    const res = await axios.get<{ 
-      data: Book[]; 
-      total: number; 
-      page: number; 
-      limit: number; 
-      totalPages: number; 
-    }>(API_URL, { params });
+    const res = await api.get<PaginatedBooks>('/books', { params });
     return res.data;
   },
 
   async getBook(id: number) {
-    const res = await axios.get<Book>(`${API_URL}/${id}`);
+    const res = await api.get<Book>(`/books/${id}`);
     return res.data;
   },
 
   async createBook(payload: CreateBookDto) {
-    const res = await axios.post<Book>(API_URL, payload);
+    const res = await api.post<Book>('/books', payload);
     return res.data;
   },
 
   async updateBook(id: number, payload: UpdateBookDto) {
-    const res = await axios.patch<Book>(`${API_URL}/${id}`, payload);
+    const res = await api.patch<Book>(`/books/${id}`, payload);
     return res.data;
   },
 
   async deleteBook(id: number) {
-    await axios.delete(`${API_URL}/${id}`);
+    await api.delete(`/books/${id}`);
     return true;
+  },
+
+  async getStats() {
+    const res = await api.get<BooksStats>('/books/stats');
+    return res.data;
   },
 };

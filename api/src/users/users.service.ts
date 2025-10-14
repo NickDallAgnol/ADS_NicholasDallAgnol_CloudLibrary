@@ -26,4 +26,9 @@ export class UsersService {
   async findAll() {
     return this.usersRepository.find();
   }
+
+  async findOneByEmail(email: string): Promise<User | null> {
+  return this.usersRepository.findOne({ where: { email } });
+}
+
 }

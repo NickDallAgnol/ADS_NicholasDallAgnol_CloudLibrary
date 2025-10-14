@@ -1,61 +1,64 @@
-// web/src/App.tsx
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import DashboardPage from './pages/DashboardPage';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { ProfilePage } from './pages/ProfilePage';
-import Layout from './components/Layout';
-
-type PrivateRouteProps = {
-  children: React.ReactNode;
-};
-
-// Rota protegida: só acessa se houver token no localStorage
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const token = localStorage.getItem('authToken');
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
-};
+import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
+import { StatsPage } from './pages/StatsPage';
+import { RequireAuth } from './components/RequireAuth';
+import { Header } from './components/Header';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Redireciona raiz para dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <Router>
+      {/* Toast global */}
+      <Toaster position="top-right" />
 
+      <Routes>
         {/* Rotas públicas */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* Dashboard protegido */}
+        {/* Redirecionar / para /login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Rotas privadas */}
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
-              <Layout>
+            <RequireAuth>
+              <>
+                <Header />
                 <DashboardPage />
-              </Layout>
-            </PrivateRoute>
+              </>
+            </RequireAuth>
           }
         />
-
-        {/* Perfil protegido */}
+        <Route
+          path="/stats"
+          element={
+            <RequireAuth>
+              <>
+                <Header />
+                <StatsPage />
+              </>
+            </RequireAuth>
+          }
+        />
         <Route
           path="/profile"
           element={
-            <PrivateRoute>
-              <Layout>
+            <RequireAuth>
+              <>
+                <Header />
                 <ProfilePage />
-              </Layout>
-            </PrivateRoute>
+              </>
+            </RequireAuth>
           }
         />
-
-        {/* 404 */}
-        <Route path="*" element={<p className="p-6">Página não encontrada</p>} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
