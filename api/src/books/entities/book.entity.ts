@@ -1,7 +1,13 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
-@Entity()
+export enum BookStatus {
+  TO_READ = 'TO_READ',
+  READING = 'READING',
+  READ = 'READ',
+}
+
+@Entity('books')
 export class Book {
   @PrimaryGeneratedColumn()
   id: number;
@@ -12,20 +18,12 @@ export class Book {
   @Column()
   author: string;
 
-  @Column()
-  publisher: string;
-
-  @Column({ nullable: true })
-  genre?: string;
-
-  @Column({ default: 'A LER' })
-  status: string;
-
-  @Column({ default: 0 })
-  progress: number;
-
-  @Column()
-  userId: number;
+  @Column({
+    type: 'enum',
+    enum: BookStatus,
+    default: BookStatus.TO_READ,
+  })
+  status: BookStatus;
 
   @ManyToOne(() => User, (user) => user.books, { onDelete: 'CASCADE' })
   user: User;

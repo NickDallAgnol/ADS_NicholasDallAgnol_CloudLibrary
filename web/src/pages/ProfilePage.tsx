@@ -1,4 +1,3 @@
-// web/src/pages/ProfilePage.tsx
 import { useEffect, useState, FormEvent } from 'react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -7,6 +6,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  createdAt: string;
 }
 
 interface Stats {
@@ -24,11 +24,10 @@ export function ProfilePage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Carrega dados do usuário
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await api.get('/auth/me');
+        const res = await api.get<User>('/auth/me');
         setUser(res.data);
         setName(res.data.name);
         setEmail(res.data.email);
@@ -40,8 +39,7 @@ export function ProfilePage() {
 
     async function fetchStats() {
       try {
-        const res = await api.get('/books/stats'); 
-        // Exemplo de endpoint: { total, toRead, reading, read }
+        const res = await api.get<Stats>('/books/stats');
         setStats(res.data);
       } catch (err) {
         console.error(err);
@@ -55,7 +53,12 @@ export function ProfilePage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      await api.put('/users/me', { name, email, password: password || undefined });
+      const res = await api.put<User>('/users/me', {
+        name,
+        email,
+        password: password || undefined,
+      });
+      setUser(res.data);
       toast.success('Perfil atualizado com sucesso!');
       setPassword('');
     } catch (err) {
@@ -76,6 +79,9 @@ export function ProfilePage() {
         <div>
           <h1 className="text-2xl font-bold">{user.name}</h1>
           <p className="text-gray-600">{user.email}</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Criado em {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+          </p>
         </div>
       </div>
 

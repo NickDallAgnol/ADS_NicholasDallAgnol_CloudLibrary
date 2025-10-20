@@ -1,352 +1,122 @@
-// web/src/pages/DashboardPage.tsx
-import React, { useState } from 'react';
-import {
-  useBooks,
-  useCreateBook,
-  useUpdateBook,
-  useDeleteBook,
-} from '../hooks/useBooks';
-import { CreateBookDto, QueryBooksDto, Book } from '../api/books';
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
 import toast from 'react-hot-toast';
+import { BookForm } from '../components/BookForm';
+import { EditBookForm } from '../components/EditBookForm';
 
-function StatusBadge({ status }: { status: Book['status'] }) {
-  const styles: Record<Book['status'], string> = {
-    'A LER': 'bg-blue-100 text-blue-700 border-blue-200',
-    'LENDO': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    'LIDO': 'bg-green-100 text-green-700 border-green-200',
-  };
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${styles[status]}`}>
-      {status === 'A LER' && '📖'}
-      {status === 'LENDO' && '⏳'}
-      {status === 'LIDO' && '✅'}
-      {status}
-    </span>
-  );
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  status: 'TO_READ' | 'READING' | 'READ';
 }
 
-function ProgressBar({ value }: { value: number }) {
-  const clamped = Math.max(0, Math.min(100, value));
-  const color =
-    clamped < 33 ? 'bg-red-500' : clamped < 66 ? 'bg-yellow-500' : 'bg-green-600';
-  return (
-    <div className="w-full">
-      <div className="flex justify-between text-xs text-gray-600 mb-1">
-        <span>Progresso</span>
-        <span>{clamped}%</span>
-      </div>
-      <div className="h-2 w-full bg-gray-200 rounded">
-        <div
-          className={`h-2 ${color} rounded`}
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+export function DashboardPage() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editingBook, setEditingBook] = useState<number | null>(null);
 
-export default function DashboardPage() {
-  const [query, setQuery] = useState<QueryBooksDto>({
-    q: '',
-    status: undefined,
-    page: 1,
-    limit: 5,
-  });
+  async function fetchBooks() {
+    try {
+      setLoading(true);
+      const res = await api.get<Book[]>('/books');
+      setBooks(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao carregar livros');
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const { data, isLoading, isError } = useBooks(query);
-  const createBook = useCreateBook();
-  const updateBook = useUpdateBook();
-  const deleteBook = useDeleteBook();
+  async function handleDelete(id: number) {
+    try {
+      await api.delete(`/books/${id}`);
+      toast.success('Livro removido com sucesso!');
+      fetchBooks();
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao remover livro');
+    }
+  }
 
-  const [form, setForm] = useState<CreateBookDto>({
-    title: '',
-    author: '',
-    status: 'A LER',
-    progress: 0,
-  });
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Book>>({});
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === 'progress' ? Number(value) : value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createBook.mutate(form, {
-      onSuccess: () => {
-        toast.success('Livro adicionado com sucesso!');
-        setForm({ title: '', author: '', status: 'A LER', progress: 0 });
-      },
-      onError: () => toast.error('Erro ao adicionar livro.'),
-    });
-  };
-
-  const handleEditChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: name === 'progress' ? Number(value) : value,
-    }));
-  };
-
-  const handleEditSave = (id: number) => {
-    updateBook.mutate(
-      { id, payload: editForm },
-      {
-        onSuccess: () => {
-          toast.success('Livro atualizado!');
-          setEditingId(null);
-          setEditForm({});
-        },
-        onError: () => toast.error('Erro ao atualizar livro.'),
-      },
-    );
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setQuery((prev) => ({ ...prev, page: 1 }));
-  };
-
-  if (isLoading) return <p className="p-6">Carregando livros...</p>;
-  if (isError) return <p className="p-6 text-red-500">Erro ao carregar livros.</p>;
+  useEffect(() => {
+    fetchBooks();
+  }, []);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">📚 Meu Acervo</h1>
-
-      {/* Filtros */}
-      <form
-        onSubmit={handleSearch}
-        className="mb-6 flex flex-col md:flex-row gap-3"
-      >
-        <input
-          type="text"
-          placeholder="Buscar por título ou autor..."
-          value={query.q ?? ''}
-          onChange={(e) => setQuery((prev) => ({ ...prev, q: e.target.value }))}
-          className="border p-2 rounded flex-1"
-        />
-        <select
-          value={query.status ?? ''}
-          onChange={(e) =>
-            setQuery((prev) => ({
-              ...prev,
-              status:
-                e.target.value === ''
-                  ? undefined
-                  : (e.target.value as QueryBooksDto['status']),
-              page: 1,
-            }))
-          }
-          className="border p-2 rounded"
-        >
-          <option value="">Todos</option>
-          <option value="A LER">A LER</option>
-          <option value="LENDO">LENDO</option>
-          <option value="LIDO">LIDO</option>
-        </select>
-        <button
-          type="submit"
-          className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800"
-        >
-          Filtrar
-        </button>
-      </form>
+      <h1 className="text-2xl font-bold mb-6">📚 Meus Livros</h1>
 
       {/* Formulário de criação */}
-      <form
-        onSubmit={handleSubmit}
-        className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-3"
-      >
-        <input
-          type="text"
-          name="title"
-          placeholder="Título"
-          value={form.title}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        />
-        <input
-          type="text"
-          name="author"
-          placeholder="Autor"
-          value={form.author}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        />
-        <select
-          name="status"
-          value={form.status}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        >
-          <option value="A LER">A LER</option>
-          <option value="LENDO">LENDO</option>
-          <option value="LIDO">LIDO</option>
-        </select>
-        <input
-          type="number"
-          name="progress"
-          placeholder="%"
-          value={form.progress}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          min={0}
-          max={100}
-        />
-        <button
-          type="submit"
-          className="md:col-span-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Adicionar Livro
-        </button>
-      </form>
+      <BookForm onSuccess={fetchBooks} />
 
-      {/* Lista de livros */}
-      <div className="grid gap-4">
-        {data?.data.map((book) => (
-          <div
-            key={book.id}
-            className="border rounded p-4 flex flex-col gap-3"
-          >
-            {editingId === book.id ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                <input
-                  type="text"
-                  name="title"
-                  value={editForm.title ?? book.title}
-                  onChange={handleEditChange}
-                  className="border p-2 rounded"
+      {/* Listagem */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Lista de Livros</h2>
+
+        {loading && <p>Carregando...</p>}
+
+        {!loading && books.length === 0 && (
+          <p className="text-gray-500">Nenhum livro cadastrado ainda.</p>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {books.map((book) => (
+            <div key={book.id} className="bg-white shadow rounded p-4">
+              {editingBook === book.id ? (
+                <EditBookForm
+                  book={book}
+                  onSuccess={() => {
+                    setEditingBook(null);
+                    fetchBooks();
+                  }}
+                  onCancel={() => setEditingBook(null)}
                 />
-                <input
-                  type="text"
-                  name="author"
-                  value={editForm.author ?? book.author}
-                  onChange={handleEditChange}
-                  className="border p-2 rounded"
-                />
-                <select
-                  name="status"
-                  value={editForm.status ?? book.status}
-                  onChange={handleEditChange}
-                  className="border p-2 rounded"
-                >
-                  <option value="A LER">A LER</option>
-                  <option value="LENDO">LENDO</option>
-                  <option value="LIDO">LIDO</option>
-                </select>
-                <input
-                  type="number"
-                  name="progress"
-                  value={editForm.progress ?? book.progress}
-                  onChange={handleEditChange}
-                  className="border p-2 rounded"
-                  min={0}
-                  max={100}
-                />
-                <div className="md:col-span-4 flex justify-end gap-2 mt-2">
-                  <button
-                    onClick={() => handleEditSave(book.id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                  >
-                    Salvar
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingId(null);
-                      setEditForm({});
-                    }}
-                    className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between">
+              ) : (
+                <div className="flex flex-col justify-between h-full">
                   <div>
-                    <p className="font-semibold text-lg">{book.title}</p>
-                    <p className="text-sm text-gray-600">{book.author}</p>
+                    <h3 className="text-lg font-bold">{book.title}</h3>
+                    <p className="text-gray-600">{book.author}</p>
+                    <span
+                      className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
+                        book.status === 'TO_READ'
+                          ? 'bg-blue-100 text-blue-600'
+                          : book.status === 'READING'
+                          ? 'bg-yellow-100 text-yellow-600'
+                          : 'bg-green-100 text-green-600'
+                      }`}
+                    >
+                      {book.status === 'TO_READ'
+                        ? 'A Ler'
+                        : book.status === 'READING'
+                        ? 'Lendo'
+                        : 'Lido'}
+                    </span>
                   </div>
-                  <StatusBadge status={book.status} />
+
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => setEditingBook(book.id)}
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(book.id)}
+                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
-
-                <ProgressBar value={book.progress} />
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingId(book.id);
-                      setEditForm(book);
-                    }}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() =>
-                      deleteBook.mutate(book.id, {
-                        onSuccess: () => toast.success('Livro excluído!'),
-                        onError: () => toast.error('Erro ao excluir livro.'),
-                      })
-                    }
-                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Paginação */}
-      <div className="flex justify-center items-center gap-4 mt-6">
-        <button
-          disabled={(query.page ?? 1) === 1}
-          onClick={() =>
-            setQuery((prev) => ({
-              ...prev,
-              page: Math.max(1, (prev.page ?? 1) - 1),
-            }))
-          }
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          Anterior
-        </button>
-
-        <span>
-          Página {data?.page ?? 1} de {data?.totalPages ?? 1}
-        </span>
-
-        <button
-          disabled={(query.page ?? 1) === (data?.totalPages ?? 1)}
-          onClick={() =>
-            setQuery((prev) => ({
-              ...prev,
-              page: Math.min(data?.totalPages ?? 1, (prev.page ?? 1) + 1),
-            }))
-          }
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          Próxima
-        </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
+export default DashboardPage;

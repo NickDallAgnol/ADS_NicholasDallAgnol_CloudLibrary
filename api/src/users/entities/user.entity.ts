@@ -1,12 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Book } from '../../books/entities/book.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ length: 100 })
   name: string;
 
   @Column({ unique: true })
@@ -15,6 +14,6 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Book, (book) => book.user)
-  books: Book[];
+  @CreateDateColumn()
+  createdAt: Date;
 }

@@ -15,7 +15,7 @@ export class BooksService {
   async create(userId: number, dto: CreateBookDto) {
     const newBook = this.booksRepository.create({
       ...dto,
-      userId,
+      user: { id: userId }, // 🔥 relacionamento correto
     });
     return this.booksRepository.save(newBook);
   }
@@ -50,7 +50,7 @@ export class BooksService {
 
   async findOne(userId: number, id: number) {
     const book = await this.booksRepository.findOne({
-      where: { id, userId },
+      where: { id, user: { id: userId } },
     });
     if (!book) throw new NotFoundException('Livro não encontrado');
     return book;
@@ -68,15 +68,15 @@ export class BooksService {
   }
 
   async getStats(userId: number) {
-    const total = await this.booksRepository.count({ where: { userId } });
+    const total = await this.booksRepository.count({ where: { user: { id: userId } } });
     const toRead = await this.booksRepository.count({
-      where: { userId, status: 'A LER' },
+      where: { user: { id: userId }, status: 'TO_READ' },
     });
     const reading = await this.booksRepository.count({
-      where: { userId, status: 'LENDO' },
+      where: { user: { id: userId }, status: 'READING' },
     });
     const read = await this.booksRepository.count({
-      where: { userId, status: 'LIDO' },
+      where: { user: { id: userId }, status: 'READ' },
     });
 
     return { total, toRead, reading, read };
