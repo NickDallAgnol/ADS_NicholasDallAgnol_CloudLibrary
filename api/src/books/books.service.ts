@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from './entities/book.entity';
+import { Book, BookStatus } from './entities/book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 
@@ -15,7 +15,7 @@ export class BooksService {
   async create(userId: number, dto: CreateBookDto) {
     const newBook = this.booksRepository.create({
       ...dto,
-      user: { id: userId }, // 🔥 relacionamento correto
+      user: { id: userId },
     });
     return this.booksRepository.save(newBook);
   }
@@ -23,8 +23,9 @@ export class BooksService {
   async findAll(userId: number, query: any) {
     const { q, status, page = 1, limit = 10 } = query;
 
-    const qb = this.booksRepository.createQueryBuilder('book');
-    qb.where('book.userId = :userId', { userId });
+    const qb = this.booksRepository.createQueryBuilder('book')
+      .leftJoin('book.user', 'user')
+      .where('user.id = :userId', { userId });
 
     if (status) {
       qb.andWhere('book.status = :status', { status });
@@ -50,9 +51,14 @@ export class BooksService {
 
   async findOne(userId: number, id: number) {
     const book = await this.booksRepository.findOne({
-      where: { id, user: { id: userId } },
+      where: { id },
+      relations: ['user'],
     });
-    if (!book) throw new NotFoundException('Livro não encontrado');
+
+    if (!book || book.user.id !== userId) {
+      throw new NotFoundException('Livro não encontrado');
+    }
+
     return book;
   }
 
@@ -68,15 +74,20 @@ export class BooksService {
   }
 
   async getStats(userId: number) {
-    const total = await this.booksRepository.count({ where: { user: { id: userId } } });
+    const total = await this.booksRepository.count({
+      where: { user: { id: userId } },
+    });
+
     const toRead = await this.booksRepository.count({
-      where: { user: { id: userId }, status: 'TO_READ' },
+      where: { user: { id: userId }, status: BookStatus.TO_READ },
     });
+
     const reading = await this.booksRepository.count({
-      where: { user: { id: userId }, status: 'READING' },
+      where: { user: { id: userId }, status: BookStatus.READING },
     });
+
     const read = await this.booksRepository.count({
-      where: { user: { id: userId }, status: 'READ' },
+      where: { user: { id: userId }, status: BookStatus.READ },
     });
 
     return { total, toRead, reading, read };

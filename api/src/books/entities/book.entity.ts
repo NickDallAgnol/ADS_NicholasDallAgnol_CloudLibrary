@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum BookStatus {
@@ -18,6 +24,12 @@ export class Book {
   @Column()
   author: string;
 
+  @Column()
+  publisher: string;
+
+  @Column({ nullable: true })
+  genre?: string;
+
   @Column({
     type: 'enum',
     enum: BookStatus,
@@ -25,6 +37,10 @@ export class Book {
   })
   status: BookStatus;
 
+  @Column({ type: 'int', default: 0 })
+  progress: number;
+
   @ManyToOne(() => User, (user) => user.books, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 }
