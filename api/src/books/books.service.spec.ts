@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BooksService } from './books.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from './entities/book.entity';
+import { Book, BookStatus } from './entities/book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
+import { User } from '../users/entities/user.entity';
 
 describe('BooksService', () => {
   let service: BooksService;
@@ -47,16 +48,27 @@ describe('BooksService', () => {
       publisher: 'Editora Teste',
     };
 
-    const createdBook = { ...dto, id: 1, userId: 1, status: 'A LER', progress: 0 };
+    const mockUser: User = { id: 1 } as User;
+
+    const createdBook: Book = {
+      id: 1,
+      title: dto.title,
+      author: dto.author,
+      publisher: dto.publisher,
+      genre: undefined,
+      status: BookStatus.TO_READ,
+      progress: 0,
+      user: mockUser,
+    };
 
     (repository.create as jest.Mock).mockReturnValue(createdBook);
     (repository.save as jest.Mock).mockResolvedValue(createdBook);
 
-    const result = await service.create(1, dto);
+    const result = await service.create(mockUser.id, dto);
 
     expect(repository.create).toHaveBeenCalledWith({
       ...dto,
-      userId: 1,
+      user: { id: mockUser.id },
     });
     expect(repository.save).toHaveBeenCalledWith(createdBook);
     expect(result).toEqual(createdBook);

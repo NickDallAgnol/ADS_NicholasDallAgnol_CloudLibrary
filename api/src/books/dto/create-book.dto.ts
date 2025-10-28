@@ -1,4 +1,3 @@
-// src/books/dto/create-book.dto.ts
 import {
   IsString,
   IsNotEmpty,
@@ -9,20 +8,20 @@ import {
   IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BookStatus } from '../entities/book.entity'; // 👈 usa o mesmo enum da entidade
+import { BookStatus } from '../entities/book.entity';
 
 export class CreateBookDto {
   @IsString()
   @IsNotEmpty({ message: 'O título é obrigatório.' })
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'O autor é obrigatório.' })
-  author: string;
+  author!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'A editora é obrigatória.' })
-  publisher: string;
+  publisher!: string;
 
   @IsOptional()
   @IsString()

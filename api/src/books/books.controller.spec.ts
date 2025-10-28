@@ -1,4 +1,3 @@
-// api/src/books/books.controller.ts
 import {
   Controller,
   Get,
@@ -9,7 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
-  Req,
+  Request,
   ParseIntPipe,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
@@ -24,26 +23,26 @@ export class BooksController {
 
   // Criar livro
   @Post()
-  create(@Req() req, @Body() dto: CreateBookDto) {
+  create(@Request() req: any, @Body() dto: CreateBookDto) {
     return this.booksService.create(req.user.id, dto);
   }
 
   // Listar livros com filtros, paginação e ordenação
   @Get()
-  findAll(@Req() req, @Query() query: any) {
+  findAll(@Request() req: any, @Query() query: any) {
     return this.booksService.findAll(req.user.id, query);
   }
 
   // Buscar livro por ID
   @Get(':id')
-  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  findOne(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
     return this.booksService.findOne(req.user.id, id);
   }
 
   // Atualizar livro
   @Patch(':id')
   update(
-    @Req() req,
+    @Request() req: any,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateBookDto,
   ) {
@@ -52,13 +51,13 @@ export class BooksController {
 
   // Deletar livro
   @Delete(':id')
-  remove(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  remove(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
     return this.booksService.remove(req.user.id, id);
   }
 
   // Estatísticas do usuário
   @Get('stats')
-  getStats(@Req() req) {
+  getStats(@Request() req: any) {
     return this.booksService.getStats(req.user.id);
   }
 }

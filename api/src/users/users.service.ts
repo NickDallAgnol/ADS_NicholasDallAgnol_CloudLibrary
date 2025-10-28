@@ -1,10 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -13,33 +12,26 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async findById(id: number) {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      select: ['id', 'name', 'email', 'createdAt'],
-    });
-
-    if (!user) throw new NotFoundException('Usuário não encontrado');
+  async findById(id: number): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
     return user;
   }
 
-  async update(id: number, data: UpdateUserDto) {
-    const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('Usuário não encontrado');
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ email });
+  }
 
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
-    }
+  async create(dto: CreateUserDto): Promise<User> {
+    const user = this.usersRepository.create(dto);
+    return this.usersRepository.save(user);
+  }
 
-    Object.assign(user, data);
-    await this.usersRepository.save(user);
-
-    // Retorna apenas dados públicos
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findById(id);
+    const updatedUser = Object.assign(user, updateUserDto);
+    return this.usersRepository.save(updatedUser);
   }
 }

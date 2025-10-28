@@ -10,20 +10,20 @@ import { Book } from '../../books/entities/book.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ length: 100 })
-  name: string;
+  name!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
-  @OneToMany(() => Book, (book) => book.user)
-  books: Book[];
+  @OneToMany(() => Book, (book) => book.user, { cascade: true })
+  books!: Book[];
 }

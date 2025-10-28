@@ -6,10 +6,11 @@ export class UpdateUserDto {
   name?: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'E-mail inválido.' })
   email?: string;
 
   @IsOptional()
-  @MinLength(6)
+  @IsString()
+  @MinLength(6, { message: 'A senha deve ter pelo menos 6 caracteres.' })
   password?: string;
 }

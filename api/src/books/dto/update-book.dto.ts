@@ -1,15 +1,18 @@
-// api/src/books/dto/update-book.dto.ts
-import { PartialType } from '@nestjs/mapped-types'; // Para NestJS 9+
-// ou import { PartialType } from '@nestjs/swagger'; // Se estiver usando Swagger
-import { CreateBookDto, BookStatus } from './create-book.dto';
-import { IsString, IsOptional, IsInt, Min, Max, IsEnum, IsNotEmpty } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateBookDto } from './create-book.dto';
+import { BookStatus } from '../entities/book.entity';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsEnum,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateBookDto extends PartialType(CreateBookDto) {
-  // O PartialType já torna todas as propriedades de CreateBookDto opcionais.
-  // Podemos adicionar validações específicas ou sobrescrever, se necessário.
-
-  // Exemplo: se quisesse que o título, mesmo sendo opcional, não pudesse ser uma string vazia se fornecido.
   @IsOptional()
   @IsString()
   @IsNotEmpty({ message: 'O título não pode ser vazio se fornecido.' })
@@ -30,7 +33,9 @@ export class UpdateBookDto extends PartialType(CreateBookDto) {
   genre?: string;
 
   @IsOptional()
-  @IsEnum(BookStatus, { message: 'Status do livro inválido. Use "A LER", "LENDO" ou "LIDO".' })
+  @IsEnum(BookStatus, {
+    message: 'Status do livro inválido. Use TO_READ, READING ou READ.',
+  })
   status?: BookStatus;
 
   @IsOptional()

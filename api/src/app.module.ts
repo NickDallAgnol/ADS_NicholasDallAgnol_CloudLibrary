@@ -1,36 +1,25 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { BooksModule } from './books/books.module';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
+import { BooksModule } from './books/books.module'; // exemplo
+import { User } from './users/entities/user.entity';
+import { Book } from './books/entities/book.entity';
 
 @Module({
   imports: [
-    // Carrega o .env e deixa disponível globalmente
-    ConfigModule.forRoot({
-      isGlobal: true,
+    ConfigModule.forRoot({ isGlobal: true }), // carrega o .env
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      entities: [User, Book],
+      synchronize: true, // cuidado: use false em produção
     }),
-
-    // Configuração do TypeORM usando variáveis do .env
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_DATABASE'),
-        autoLoadEntities: true,
-        synchronize: true, // ⚠️ Em produção, use migrations
-      }),
-    }),
-
+    TypeOrmModule.forFeature([Book]), // se quiser usar o repositório direto
     BooksModule,
-    UsersModule,
-    AuthModule,
   ],
 })
 export class AppModule {}

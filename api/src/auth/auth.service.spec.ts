@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -11,10 +12,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(createUserDto: CreateUserDto) {
-    const existingUser = await this.usersService.findOneByEmail(
-      createUserDto.email,
-    );
+  async register(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
+    const existingUser = await this.usersService.findByEmail(createUserDto.email);
     if (existingUser) {
       throw new ConflictException('O email informado já está em uso.');
     }
@@ -26,7 +25,6 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
   }

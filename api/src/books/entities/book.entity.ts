@@ -16,16 +16,16 @@ export enum BookStatus {
 @Entity('books')
 export class Book {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  author: string;
+  author!: string;
 
   @Column()
-  publisher: string;
+  publisher!: string;
 
   @Column({ nullable: true })
   genre?: string;
@@ -35,12 +35,15 @@ export class Book {
     enum: BookStatus,
     default: BookStatus.TO_READ,
   })
-  status: BookStatus;
+  status!: BookStatus;
 
   @Column({ type: 'int', default: 0 })
-  progress: number;
+  progress!: number;
 
-  @ManyToOne(() => User, (user) => user.books, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  @ManyToOne(() => User, (user) => user.books, {
+    onDelete: 'CASCADE',
+    eager: false,
+  })
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
 }
