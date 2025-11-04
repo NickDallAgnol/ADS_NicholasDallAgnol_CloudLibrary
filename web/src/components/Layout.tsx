@@ -1,6 +1,4 @@
-// web/src/components/Layout.tsx
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,9 +8,8 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Remove o token salvo no navegador
-    localStorage.removeItem('authToken');
-    navigate('/login');
+    localStorage.removeItem("authToken");
+    navigate("/login");
   };
 
   return (
@@ -43,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Footer */}
       <footer className="bg-gray-200 text-center py-3 text-sm text-gray-600">
-        © {new Date().getFullYear()} MyLibrary — Todos os direitos reservados
+        © {new Date().getFullYear().toString()} MyLibrary — Todos os direitos reservados
       </footer>
     </div>
   );

@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export function Header() {
   const { logout } = useAuth();
