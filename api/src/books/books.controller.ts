@@ -21,6 +21,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
+  @Get('stats/overview')
+  getStats(@Request() req: any) {
+    return this.booksService.getStats(req.user.id);
+  }
+
   @Post()
   create(@Request() req: any, @Body() dto: CreateBookDto) {
     return this.booksService.create(req.user.id, dto);
@@ -54,10 +59,5 @@ export class BooksController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.booksService.remove(req.user.id, id);
-  }
-
-  @Get('stats/overview')
-  getStats(@Request() req: any) {
-    return this.booksService.getStats(req.user.id);
   }
 }

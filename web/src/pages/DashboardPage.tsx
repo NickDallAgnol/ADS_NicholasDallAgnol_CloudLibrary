@@ -10,6 +10,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -115,7 +117,12 @@ export function DashboardPage() {
 
       {/* Estatísticas */}
       {stats && (
-        <div className="mb-8 bg-white shadow rounded p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 bg-white shadow rounded p-6"
+        >
           <h2 className="text-xl font-semibold mb-4">📊 Estatísticas</h2>
           <p className="mb-4">Total de livros: {stats.total}</p>
           <div className="max-w-sm">
@@ -131,16 +138,22 @@ export function DashboardPage() {
               }}
             />
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Formulário de criação */}
-      <BookForm
-        onSuccess={() => {
-          fetchBooks();
-          fetchStats();
-        }}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <BookForm
+          onSuccess={() => {
+            fetchBooks();
+            fetchStats();
+          }}
+        />
+      </motion.div>
 
       {/* Filtros e ordenação */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 mt-8">
@@ -197,15 +210,36 @@ export function DashboardPage() {
       <div>
         <h2 className="text-xl font-semibold mb-4">Lista de Livros</h2>
 
-        {loading && <p>Carregando...</p>}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            >
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+            </motion.div>
+          </div>
+        )}
 
         {!loading && books.length === 0 && (
-          <p className="text-gray-500">Nenhum livro encontrado.</p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-gray-500"
+          >
+            Nenhum livro encontrado.
+          </motion.p>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.map((book) => (
-            <div key={book.id} className="bg-white shadow rounded p-4">
+            <motion.div
+              key={book.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white shadow rounded p-4"
+            >
               {editingBook === book.id ? (
                 <EditBookForm
                   book={book}
@@ -281,18 +315,22 @@ export function DashboardPage() {
 
                   <div className="flex flex-col gap-2 mt-4">
                     <div className="flex gap-2">
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setEditingBook(book.id)}
                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
                       >
                         Editar
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => handleDelete(book.id)}
                         className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
                       >
                         Excluir
-                      </button>
+                      </motion.button>
                     </div>
 
                     {/* Botões de atualização rápida de status */}
@@ -325,7 +363,7 @@ export function DashboardPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
 

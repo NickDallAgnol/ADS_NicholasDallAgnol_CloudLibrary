@@ -1,62 +1,131 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useState, FormEvent } from "react";
+import { api } from "../services/api";
+import { useNavigate, Link } from "react-router-dom";
+import toast from 'react-hot-toast';
+import { UserPlus } from 'lucide-react';
 
-export default function Register() {
+export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // Validações
+    if (!name.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    if (!email) {
+      toast.error('E-mail é obrigatório');
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      toast.error('Digite um e-mail válido');
+      return;
+    }
+    if (!password) {
+      toast.error('Senha é obrigatória');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:3000/register", {
+      setLoading(true);
+      await api.post("/auth/register", {
         name,
         email,
-        password: senha,
+        password,
       });
-      alert("Usuário registrado com sucesso!");
+      toast.success("Usuário registrado com sucesso! Faça login.");
       navigate("/login");
-    } catch (err) {
-      alert("Erro ao registrar usuário");
+    } catch (err: any) {
+      console.error(err);
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Erro ao registrar usuário");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-6 rounded shadow w-80">
-        <h1 className="text-2xl font-bold mb-4">Registrar</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border p-2 rounded"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border p-2 rounded"
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            className="border p-2 rounded"
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-green-700 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <UserPlus className="w-8 h-8 text-green-600" />
+          <h1 className="text-3xl font-bold text-gray-900">Cadastro</h1>
+        </div>
+
+        <p className="text-center text-gray-600 mb-6">Crie sua conta na Cloud Library</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nome Completo
+            </label>
+            <input
+              type="text"
+              placeholder="Seu nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              E-mail
+            </label>
+            <input
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Senha
+            </label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
           <button
             type="submit"
-            className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Registrar
+            {loading ? 'Criando conta...' : 'Criar Conta'}
           </button>
         </form>
+
+        <div className="mt-6 pt-6 border-t border-gray-300 text-center">
+          <p className="text-sm text-gray-600">
+            Já tem uma conta?{' '}
+            <Link to="/login" className="text-green-600 hover:underline font-semibold">
+              Faça login
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+

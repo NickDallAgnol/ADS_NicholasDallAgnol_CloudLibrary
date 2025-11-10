@@ -1,71 +1,55 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
 import Layout from "./components/Layout";
-import Register from "./pages/RegisterPage";
-import { Header } from "./components/Header";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import { RequireAuth } from "./components/RequireAuth";
+import { DashboardPage } from "./pages/DashboardPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { StatsPage } from "./pages/StatsPage";
 
-// Páginas de exemplo
-function Login() {
+export default function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-6 rounded shadow w-80">
-        <h1 className="text-2xl font-bold mb-4">Login</h1>
-        <form className="flex flex-col gap-3">
-          <input
-            type="email"
-            placeholder="Email"
-            className="border p-2 rounded"
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            className="border p-2 rounded"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
-            Entrar
-          </button>
-        </form>
-        <p className="mt-4 text-sm text-center">
-          Ainda não tem conta?{" "}
-          <a href="/register" className="text-blue-600 hover:underline">
-            Cadastre-se
-          </a>
-        </p>
-      </div>
+    <div
+      className={
+        darkMode
+          ? "dark bg-gray-900 text-white min-h-screen"
+          : "bg-gray-50 min-h-screen"
+      }
+    >
+      <button
+        onClick={() => setDarkMode((d) => !d)}
+        className="fixed top-4 right-4 px-4 py-2 rounded bg-blue-600 text-white z-50"
+      >
+        {darkMode ? "🌙 Tema Claro" : "🌞 Tema Escuro"}
+      </button>
+      <Routes>
+        {/* Rotas públicas */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Rotas protegidas com layout */}
+        <Route
+          element={
+            <RequireAuth>
+              <Layout>
+                <></>
+              </Layout>
+            </RequireAuth>
+          }
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/stats" element={<StatsPage />} />
+        </Route>
+
+        {/* Redirecionamento padrão */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </div>
   );
 }
 
-function Dashboard() {
-  return <h1 className="text-2xl font-bold">Dashboard</h1>;
-}
-
-function Profile() {
-  return <h1 className="text-2xl font-bold">Perfil</h1>;
-}
-
-function Stats() {
-  return <h1 className="text-2xl font-bold">Estatísticas</h1>;
-}
-
-export default function App() {
-  return (
-    <Routes>
-      {/* Rotas públicas */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-
-      {/* Rotas protegidas com layout */}
-      <Route element={<Layout><Header /></Layout>}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/stats" element={<Stats />} />
-      </Route>
-
-      {/* Redirecionamento padrão */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  );
-}
