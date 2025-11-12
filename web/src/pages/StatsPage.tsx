@@ -20,6 +20,10 @@ interface Stats {
 
 export function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("darkMode");
+    return saved ? JSON.parse(saved) : false;
+  });
 
   useEffect(() => {
     async function fetchStats() {
@@ -34,7 +38,7 @@ export function StatsPage() {
     fetchStats();
   }, []);
 
-  if (!stats) return <p className="p-6">Carregando estatísticas...</p>;
+  if (!stats) return <p className={`p-6 ${darkMode ? 'text-white' : ''}`}>Carregando estatísticas...</p>;
 
   const cards = [
     {
@@ -74,7 +78,7 @@ export function StatsPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className={`max-w-5xl mx-auto p-6 ${darkMode ? 'bg-gray-900 text-white' : ''}`}>
       <h1 className="text-2xl font-bold mb-6">📊 Estatísticas</h1>
 
       {/* Cards */}
@@ -82,19 +86,19 @@ export function StatsPage() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="bg-white shadow rounded p-4 flex flex-col items-center justify-center"
+            className={`shadow rounded p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}
           >
             <div className={`p-3 rounded-full ${card.bg} mb-2`}>
               {card.icon}
             </div>
             <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-            <p className="text-gray-600">{card.label}</p>
+            <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{card.label}</p>
           </div>
         ))}
       </div>
 
       {/* Gráfico de Pizza */}
-      <div className="bg-white shadow rounded p-6">
+      <div className={`shadow rounded p-6 ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}>
         <h2 className="text-xl font-semibold mb-4">Distribuição de Livros</h2>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -111,8 +115,12 @@ export function StatsPage() {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend />
+            <Tooltip 
+              contentStyle={darkMode ? { backgroundColor: '#1F2937', border: '1px solid #374151', color: '#F3F4F6' } : {}}
+            />
+            <Legend 
+              wrapperStyle={darkMode ? { color: '#F3F4F6' } : {}}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>

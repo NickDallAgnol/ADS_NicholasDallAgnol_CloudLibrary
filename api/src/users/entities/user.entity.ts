@@ -6,6 +6,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Book } from '../../books/entities/book.entity';
+import { Loan } from '../../loans/entities/loan.entity';
 
 @Entity('users')
 export class User {
@@ -26,4 +27,7 @@ export class User {
 
   @OneToMany(() => Book, (book) => book.user, { cascade: true })
   books!: Book[];
+
+  @OneToMany(() => Loan, (loan) => loan.lentBy, { cascade: true })
+  loans!: Loan[];
 }

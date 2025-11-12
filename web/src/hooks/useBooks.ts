@@ -1,62 +1,132 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BooksAPI } from '../api/books';
-import type {
-  Book,
-  CreateBookDto,
-  UpdateBookDto,
-  QueryBooksDto,
-  PaginatedBooks,
-} from '../api/books';
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
 
-// Chave base para o cache do React Query
-const BOOKS_QUERY_KEY = ['books'];
+export interface Book {
+  id: number;
+  title: string;
+  author: string;
+  publisher?: string;
+  genre?: string;
+  status: 'TO_READ' | 'READING' | 'READ';
+  progress: number;
+  userId?: number;
+}
+
+export interface QueryBooksDto {
+  q?: string;
+  status?: 'TO_READ' | 'READING' | 'READ';
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedBooks {
+  data: Book[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
 // Lista de livros (com paginação e filtros)
-export function useBooks(query?: QueryBooksDto) {
-  return useQuery<PaginatedBooks>({
-    queryKey: [...BOOKS_QUERY_KEY, query],
-    queryFn: () => BooksAPI.getBooks(query),
-  });
+export function useBooks(query?: Partial<QueryBooksDto>) {
+  const [data, setData] = useState<PaginatedBooks | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get('/books', { params: query });
+        setData(response.data);
+        setError(null);
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, [query?.q, query?.status, query?.page, query?.limit]);
+
+  return { data, isLoading, error };
 }
 
 // Um livro específico
 export function useBook(id: number) {
-  return useQuery<Book>({
-    queryKey: [...BOOKS_QUERY_KEY, id],
-    queryFn: () => BooksAPI.getBook(id),
-    enabled: !!id,
-  });
+  const [data, setData] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchBook = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get(`/books/${id}`);
+        setData(response.data);
+        setError(null);
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBook();
+  }, [id]);
+
+  return { data, isLoading, error };
 }
 
 // Criar livro
 export function useCreateBook() {
-  const queryClient = useQueryClient();
-  return useMutation<Book, Error, CreateBookDto>({
-    mutationFn: (payload) => BooksAPI.createBook(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BOOKS_QUERY_KEY });
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = async (payload: any) => {
+    setIsPending(true);
+    try {
+      const response = await api.post('/books', payload);
+      return response.data;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { mutateAsync, isPending };
 }
 
 // Atualizar livro
 export function useUpdateBook() {
-  const queryClient = useQueryClient();
-  return useMutation<Book, Error, { id: number; payload: UpdateBookDto }>({
-    mutationFn: ({ id, payload }) => BooksAPI.updateBook(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BOOKS_QUERY_KEY });
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = async ({ id, payload }: { id: number; payload: any }) => {
+    setIsPending(true);
+    try {
+      const response = await api.patch(`/books/${id}`, payload);
+      return response.data;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { mutateAsync, isPending };
 }
 
 // Deletar livro
 export function useDeleteBook() {
-  const queryClient = useQueryClient();
-  return useMutation<boolean, Error, number>({
-    mutationFn: (id) => BooksAPI.deleteBook(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BOOKS_QUERY_KEY });
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = async (id: number) => {
+    setIsPending(true);
+    try {
+      await api.delete(`/books/${id}`);
+      return true;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { mutateAsync, isPending };
 }

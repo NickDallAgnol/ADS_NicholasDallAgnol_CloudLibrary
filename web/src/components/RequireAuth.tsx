@@ -1,4 +1,3 @@
-// src/components/RequireAuth.tsx
 import { JSX } from 'react';
 import { Navigate } from 'react-router-dom';
 

@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Outlet } from "react-router-dom";
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
@@ -23,6 +23,15 @@ export default function Layout({ children }: LayoutProps) {
           <Link to="/dashboard" className="hover:text-blue-200 transition">
             Dashboard
           </Link>
+          <Link to="/books" className="hover:text-blue-200 transition">
+            Livros
+          </Link>
+          <Link to="/loans" className="hover:text-blue-200 transition">
+            Empréstimos
+          </Link>
+          <Link to="/export" className="hover:text-blue-200 transition">
+            Exportar
+          </Link>
           <Link to="/stats" className="hover:text-blue-200 transition">
             Estatísticas
           </Link>
@@ -39,7 +48,9 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 p-6">
+        {children ? children : <Outlet />}
+      </main>
 
       {/* Footer */}
       <footer className="bg-gray-200 text-center py-4 text-sm text-gray-600">

@@ -10,8 +10,11 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { BooksService } from './books.service';
+import { BooksExportService } from './books.export.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
@@ -19,7 +22,26 @@ import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 @Controller('books')
 @UseGuards(JwtAuthGuard) // garante que só usuários autenticados acessem
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(
+    private readonly booksService: BooksService,
+    private readonly booksExportService: BooksExportService,
+  ) {}
+
+  @Get('export/pdf')
+  async exportPdf(
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    await this.booksExportService.exportToPdf(req.user.id, res);
+  }
+
+  @Get('export/csv')
+  async exportCsv(
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    await this.booksExportService.exportToCsv(req.user.id, res);
+  }
 
   @Get('stats/overview')
   getStats(@Request() req: any) {

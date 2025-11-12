@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -7,49 +6,38 @@ import { RequireAuth } from "./components/RequireAuth";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { StatsPage } from "./pages/StatsPage";
+import BooksPage from "./pages/BooksPage";
+import LoansPage from "./pages/LoansPage";
+import ExportPage from "./pages/ExportPage";
+import "./App.css";
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
-
   return (
-    <div
-      className={
-        darkMode
-          ? "dark bg-gray-900 text-white min-h-screen"
-          : "bg-gray-50 min-h-screen"
-      }
-    >
-      <button
-        onClick={() => setDarkMode((d) => !d)}
-        className="fixed top-4 right-4 px-4 py-2 rounded bg-blue-600 text-white z-50"
+    <Routes>
+      {/* Rotas públicas */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Rotas protegidas */}
+      <Route
+        element={
+          <RequireAuth>
+            <Layout />
+          </RequireAuth>
+        }
       >
-        {darkMode ? "🌙 Tema Claro" : "🌞 Tema Escuro"}
-      </button>
-      <Routes>
-        {/* Rotas públicas */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/books" element={<BooksPage />} />
+        <Route path="/loans" element={<LoansPage />} />
+        <Route path="/export" element={<ExportPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/stats" element={<StatsPage />} />
+      </Route>
 
-        {/* Rotas protegidas com layout */}
-        <Route
-          element={
-            <RequireAuth>
-              <Layout>
-                <></>
-              </Layout>
-            </RequireAuth>
-          }
-        >
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/stats" element={<StatsPage />} />
-        </Route>
-
-        {/* Redirecionamento padrão */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </div>
+      {/* Redirecionamento padrão */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 
