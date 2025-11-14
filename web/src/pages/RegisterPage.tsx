@@ -1,7 +1,6 @@
 import { useState, FormEvent } from "react";
 import { api } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
-import toast from 'react-hot-toast';
 import { UserPlus } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -16,23 +15,23 @@ export default function RegisterPage() {
 
     // Validações
     if (!name.trim()) {
-      toast.error('Nome é obrigatório');
+      alert('Nome é obrigatório');
       return;
     }
     if (!email) {
-      toast.error('E-mail é obrigatório');
+      alert('E-mail é obrigatório');
       return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error('Digite um e-mail válido');
+      alert('Digite um e-mail válido');
       return;
     }
     if (!password) {
-      toast.error('Senha é obrigatória');
+      alert('Senha é obrigatória');
       return;
     }
     if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+      alert('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
@@ -43,14 +42,14 @@ export default function RegisterPage() {
         email,
         password,
       });
-      toast.success("Usuário registrado com sucesso! Faça login.");
+      alert("Usuário registrado com sucesso! Faça login.");
       navigate("/login");
     } catch (err: any) {
       console.error(err);
       if (err.response?.data?.message) {
-        toast.error(err.response.data.message);
+        alert(err.response.data.message);
       } else {
-        toast.error("Erro ao registrar usuário");
+        alert("Erro ao registrar usuário");
       }
     } finally {
       setLoading(false);

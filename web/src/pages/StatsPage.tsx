@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import toast from 'react-hot-toast';
 import { BookOpen, BookMarked, BookCheck, Library } from 'lucide-react';
 import {
   PieChart,
@@ -32,7 +31,7 @@ export function StatsPage() {
         setStats(res.data);
       } catch (err) {
         console.error(err);
-        toast.error('Erro ao carregar estatísticas');
+        alert('Erro ao carregar estatísticas');
       }
     }
     fetchStats();

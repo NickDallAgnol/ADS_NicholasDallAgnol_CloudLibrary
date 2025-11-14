@@ -11,20 +11,19 @@ import LoansPage from "./pages/LoansPage";
 import ExportPage from "./pages/ExportPage";
 import "./App.css";
 
+console.log("🔍 App.tsx carregado");
+
 export default function App() {
+  console.log("🚀 App renderizando");
   return (
     <Routes>
       {/* Rotas públicas */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* Rotas protegidas */}
+      {/* Rotas protegidas com Layout */}
       <Route
-        element={
-          <RequireAuth>
-            <Layout />
-          </RequireAuth>
-        }
+        element={<RequireAuth><Layout /></RequireAuth>}
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/books" element={<BooksPage />} />

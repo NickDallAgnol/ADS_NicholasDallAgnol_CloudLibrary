@@ -64,7 +64,12 @@ export class LoansService {
 
   async update(userId: number, id: number, dto: UpdateLoanDto): Promise<Loan> {
     const loan = await this.findOne(userId, id);
-    Object.assign(loan, dto);
+    
+    if (dto.book_id !== undefined) loan.book_id = dto.book_id;
+    if (dto.borrowed_from_id !== undefined) loan.borrowed_from_id = dto.borrowed_from_id;
+    if (dto.isReturned !== undefined) loan.isReturned = dto.isReturned;
+    if (dto.returnDate !== undefined) loan.returnDate = dto.returnDate;
+    
     return this.loansRepository.save(loan);
   }
 

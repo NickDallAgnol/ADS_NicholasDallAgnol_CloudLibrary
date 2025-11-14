@@ -24,8 +24,8 @@ export class Book {
   @Column()
   author!: string;
 
-  @Column()
-  publisher!: string;
+  @Column({ nullable: true })
+  publisher?: string;
 
   @Column({ nullable: true })
   genre?: string;

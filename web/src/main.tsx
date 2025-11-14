@@ -4,10 +4,20 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-);
+console.log("🔍 main.tsx carregado");
+
+const rootElement = document.getElementById("root");
+console.log("📍 Root element:", rootElement);
+
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+  console.log("✅ App renderizado com sucesso");
+} else {
+  console.error("❌ Elemento root não encontrado!");
+}

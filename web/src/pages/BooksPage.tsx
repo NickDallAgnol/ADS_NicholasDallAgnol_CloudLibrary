@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useBooks, useCreateBook, useUpdateBook, useDeleteBook, type Book } from "../hooks/useBooks";
-import toast from "react-hot-toast";
 import { Plus, Edit2, Trash2, X } from "lucide-react";
 
 export default function BooksPage() {
@@ -23,7 +22,7 @@ export default function BooksPage() {
   });
 
   // Hooks
-  const { data, isLoading, error } = useBooks({
+  const { data, isLoading, error, refresh } = useBooks({
     q: filters.q,
     status: (filters.status || undefined) as "TO_READ" | "READING" | "READ" | undefined,
     page: filters.page,
@@ -68,7 +67,7 @@ export default function BooksPage() {
     e.preventDefault();
 
     if (!formData.title || !formData.author) {
-      toast.error("Preencha título e autor!");
+      alert("Preencha título e autor!");
       return;
     }
 
@@ -78,24 +77,27 @@ export default function BooksPage() {
           id: editingBook.id,
           payload: formData,
         });
-        toast.success("Livro atualizado!");
+        alert(`✅ Livro "${formData.title}" atualizado com sucesso!`);
       } else {
         await createBook.mutateAsync(formData);
-        toast.success("Livro criado!");
+        alert(`✅ Livro "${formData.title}" criado com sucesso!`);
       }
       closeModal();
+      refresh();
     } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar livro");
+      alert(`❌ Erro ao salvar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Tem certeza que deseja deletar este livro?")) {
+    const bookTitle = books.find(b => b.id === id)?.title || "Livro";
+    if (window.confirm(`Tem certeza que deseja deletar "${bookTitle}"?`)) {
       try {
         await deleteBook.mutateAsync(id);
-        toast.success("Livro deletado!");
+        alert(`✅ Livro "${bookTitle}" deletado com sucesso!`);
+        refresh();
       } catch (err: any) {
-        toast.error(err.message || "Erro ao deletar livro");
+        alert(`❌ Erro ao deletar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
       }
     }
   };

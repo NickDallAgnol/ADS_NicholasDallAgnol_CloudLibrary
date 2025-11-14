@@ -55,6 +55,7 @@ export class BooksController {
 
   @Get()
   findAll(@Request() req: any, @Query() query: any) {
+    console.log('📨 Query params recebidos:', query);
     return this.booksService.findAll(req.user.id, query);
   }
 

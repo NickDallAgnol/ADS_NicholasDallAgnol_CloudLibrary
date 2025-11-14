@@ -15,6 +15,12 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
+  @Get()
+  async getAllUsers() {
+    return this.usersService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   getProfile(@Request() req: any) {
     return this.usersService.findById(Number(req.user.id));

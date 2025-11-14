@@ -25,10 +25,10 @@ export class CreateBookDto {
   @MinLength(2)
   author!: string;
 
-  @ApiProperty({ example: 'Editora Exemplo' })
+  @ApiProperty({ example: 'Editora Exemplo', required: false })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'A editora é obrigatória.' })
-  publisher!: string;
+  publisher?: string;
 
   @ApiProperty({ example: 'Ficção Científica', required: false })
   @IsOptional()

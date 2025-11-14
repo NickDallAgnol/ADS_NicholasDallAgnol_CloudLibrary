@@ -1,6 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { api } from '../services/api';
-import toast from 'react-hot-toast';
 
 interface User {
   id: number;
@@ -37,7 +36,7 @@ export function ProfilePage() {
         setEmail(res.data.email);
       } catch (err) {
         console.error(err);
-        toast.error('Erro ao carregar perfil.');
+        alert('Erro ao carregar perfil.');
       }
     }
 
@@ -63,11 +62,11 @@ export function ProfilePage() {
         password: password || undefined,
       });
       setUser(res.data);
-      toast.success('Perfil atualizado com sucesso!');
+      alert('Perfil atualizado com sucesso!');
       setPassword('');
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao atualizar perfil.');
+      alert('Erro ao atualizar perfil.');
     }
   }
 
@@ -83,6 +82,9 @@ export function ProfilePage() {
         <div>
           <h1 className="text-2xl font-bold">{user.name}</h1>
           <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{user.email}</p>
+          <p className={`text-sm mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            ID: <strong>{user.id}</strong>
+          </p>
           <p className={`text-sm mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             Criado em {new Date(user.createdAt).toLocaleDateString('pt-BR')}
           </p>

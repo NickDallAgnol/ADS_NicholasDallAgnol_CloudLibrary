@@ -1,6 +1,5 @@
 import { useState, FormEvent } from 'react';
 import { api } from '../services/api';
-import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 
@@ -15,19 +14,19 @@ export function LoginPage() {
 
     // 🔎 Validações antes de enviar
     if (!email) {
-      toast.error('O e-mail é obrigatório');
+      alert('O e-mail é obrigatório');
       return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error('Digite um e-mail válido');
+      alert('Digite um e-mail válido');
       return;
     }
     if (!password) {
-      toast.error('A senha é obrigatória');
+      alert('A senha é obrigatória');
       return;
     }
     if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+      alert('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
@@ -35,11 +34,11 @@ export function LoginPage() {
       setLoading(true);
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.access_token);
-      toast.success('Login realizado com sucesso!');
+      alert('Login realizado com sucesso!');
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      toast.error('Credenciais inválidas');
+      alert('Credenciais inválidas');
     } finally {
       setLoading(false);
     }

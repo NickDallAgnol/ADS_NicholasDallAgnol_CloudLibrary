@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { api } from '../services/api';
 
 export interface Book {
@@ -31,15 +31,27 @@ export function useBooks(query?: Partial<QueryBooksDto>) {
   const [data, setData] = useState<PaginatedBooks | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
 
   useEffect(() => {
     const fetchBooks = async () => {
       setIsLoading(true);
       try {
-        const response = await api.get('/books', { params: query });
+        // Limpar parâmetros vazios para evitar problemas no backend
+        const cleanQuery = Object.fromEntries(
+          Object.entries(query || {}).filter(([_, v]) => v !== '' && v !== undefined && v !== null)
+        );
+        
+        console.log('📚 Fetching books with query:', cleanQuery);
+        const response = await api.get('/books', { params: cleanQuery });
         setData(response.data);
         setError(null);
       } catch (err: any) {
+        console.error('❌ Error fetching books:', err);
         setError(err);
       } finally {
         setIsLoading(false);
@@ -47,9 +59,9 @@ export function useBooks(query?: Partial<QueryBooksDto>) {
     };
 
     fetchBooks();
-  }, [query?.q, query?.status, query?.page, query?.limit]);
+  }, [query?.q, query?.status, query?.page, query?.limit, refreshKey]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refresh };
 }
 
 // Um livro específico

@@ -20,6 +20,10 @@ export class UsersService {
     return user;
   }
 
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find();
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ email });
   }
@@ -31,7 +35,11 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
-    const updatedUser = Object.assign(user, updateUserDto);
-    return this.usersRepository.save(updatedUser);
+    
+    if (updateUserDto.name !== undefined) user.name = updateUserDto.name;
+    if (updateUserDto.email !== undefined) user.email = updateUserDto.email;
+    if (updateUserDto.password !== undefined) user.password = updateUserDto.password;
+    
+    return this.usersRepository.save(user);
   }
 }

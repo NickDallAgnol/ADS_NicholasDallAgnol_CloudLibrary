@@ -1,10 +1,6 @@
 import { Link, useNavigate, Outlet } from "react-router-dom";
 
-interface LayoutProps {
-  children?: React.ReactNode;
-}
-
-export default function Layout({ children }: LayoutProps) {
+export default function Layout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -49,7 +45,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Conteúdo principal */}
       <main className="flex-1 p-6">
-        {children ? children : <Outlet />}
+        <Outlet />
       </main>
 
       {/* Footer */}
