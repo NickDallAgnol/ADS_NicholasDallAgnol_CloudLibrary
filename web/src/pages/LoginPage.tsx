@@ -1,6 +1,6 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { api } from '../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 
 export function LoginPage() {
@@ -8,6 +8,21 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.get('/auth/me')
+        .then(() => {
+          navigate('/dashboard', { replace: true });
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+        });
+    }
+  }, [navigate]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -35,7 +50,10 @@ export function LoginPage() {
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.access_token);
       alert('Login realizado com sucesso!');
-      navigate('/dashboard');
+      
+      // Redirecionar para a página que o usuário tentou acessar ou dashboard
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     } catch (err) {
       console.error(err);
       alert('Credenciais inválidas');

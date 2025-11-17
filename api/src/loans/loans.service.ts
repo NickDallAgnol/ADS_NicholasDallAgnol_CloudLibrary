@@ -30,6 +30,8 @@ export class LoansService {
 
     const qb = this.loansRepository
       .createQueryBuilder('loan')
+      .leftJoinAndSelect('loan.lentBy', 'lentBy')
+      .leftJoinAndSelect('loan.borrowedFrom', 'borrowedFrom')
       .where('loan.lent_by_id = :userId', { userId })
       .orWhere('loan.borrowed_from_id = :userId', { userId });
 
@@ -37,7 +39,7 @@ export class LoansService {
       qb.andWhere('loan.is_returned = true');
     }
 
-    qb.orderBy('loan.borrowed_date', 'DESC');
+    qb.orderBy('loan.id', 'DESC');
     qb.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
@@ -53,9 +55,10 @@ export class LoansService {
   async findOne(userId: number, id: number): Promise<Loan> {
     const loan = await this.loansRepository.findOne({
       where: { id },
+      relations: ['lentBy', 'borrowedFrom'],
     });
 
-    if (!loan || (loan.lentBy.id !== userId && loan.borrowedFrom.id !== userId)) {
+    if (!loan || (loan.lent_by_id !== userId && loan.borrowed_from_id !== userId)) {
       throw new NotFoundException('Empréstimo não encontrado');
     }
 

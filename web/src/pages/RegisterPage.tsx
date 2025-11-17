@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { api } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus } from 'lucide-react';
@@ -9,6 +9,20 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.get('/auth/me')
+        .then(() => {
+          navigate('/dashboard', { replace: true });
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+        });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

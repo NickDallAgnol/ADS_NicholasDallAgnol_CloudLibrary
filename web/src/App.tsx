@@ -34,8 +34,14 @@ export default function App() {
       </Route>
 
       {/* Redirecionamento padrão */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      
+      {/* Qualquer rota não encontrada redireciona para RequireAuth que verifica token */}
+      <Route path="*" element={
+        <RequireAuth>
+          <Navigate to="/dashboard" replace />
+        </RequireAuth>
+      } />
     </Routes>
   );
 }

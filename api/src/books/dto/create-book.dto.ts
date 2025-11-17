@@ -7,6 +7,7 @@ import {
   Max,
   IsEnum,
   MinLength,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -49,4 +50,10 @@ export class CreateBookDto {
   @Max(100, { message: 'O progresso máximo é 100.' })
   @Type(() => Number)
   progress?: number;
+
+  @ApiProperty({ example: true, required: false, description: 'Se o livro está disponível para empréstimo' })
+  @IsOptional()
+  @IsBoolean({ message: 'availableForLoan deve ser um valor booleano.' })
+  @Type(() => Boolean)
+  availableForLoan?: boolean;
 }

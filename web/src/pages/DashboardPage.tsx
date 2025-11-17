@@ -253,7 +253,10 @@ export function DashboardPage() {
               ) : (
                 <div className="flex flex-col justify-between h-full">
                   <div>
-                    <h3 className="text-lg font-bold">{book.title}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold">{book.title}</h3>
+                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded font-mono">ID: {book.id}</span>
+                    </div>
                     <p className="text-gray-600">{book.author}</p>
                     <span
                       className={`inline-block mt-2 px-2 py-1 text-xs rounded ${book.status === 'TO_READ'

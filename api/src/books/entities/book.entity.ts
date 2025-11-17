@@ -40,6 +40,9 @@ export class Book {
   @Column({ type: 'int', default: 0 })
   progress!: number;
 
+  @Column({ type: 'boolean', default: true, name: 'available_for_loan' })
+  availableForLoan!: boolean;
+
   @ManyToOne(() => User, (user) => user.books, {
     onDelete: 'CASCADE',
     eager: false,

@@ -16,7 +16,11 @@ export function Header() {
       <nav className="flex gap-8 items-center">
         <Link to="/dashboard" className="hover:text-blue-200 transition flex items-center gap-2">
           <User className="w-4 h-4" />
-          Dashboard
+          Livros
+        </Link>
+        <Link to="/loans" className="hover:text-blue-200 transition flex items-center gap-2">
+          <BarChart3 className="w-4 h-4" />
+          Empréstimos
         </Link>
         <Link to="/stats" className="hover:text-blue-200 transition flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />

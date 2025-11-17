@@ -8,17 +8,11 @@ interface Book {
   author: string;
 }
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
 interface Loan {
   id: number;
-  book: Book;
-  borrowedFrom: User;
-  lentBy: User;
+  book_id: number;
+  borrowed_from_id: number;
+  lent_by_id: number;
   borrowedDate: string;
   returnDate?: string;
   isReturned: boolean;
@@ -27,7 +21,6 @@ interface Loan {
 export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ book_id: "", borrowed_from_id: "" });
@@ -46,15 +39,6 @@ export default function LoansPage() {
       // Buscar livros
       const booksRes = await api.get("/books");
       setBooks(booksRes.data.data || []);
-
-      // Buscar usuários (se houver endpoint)
-      try {
-        const usersRes = await api.get("/users");
-        setUsers(usersRes.data.data || []);
-      } catch {
-        // Se não houver endpoint de usuários, deixar vazio
-        console.log("Endpoint /users não disponível");
-      }
     } catch (err: any) {
       alert("Erro ao carregar dados");
       console.error(err);
@@ -66,14 +50,22 @@ export default function LoansPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const book = books.find(b => b.id === parseInt(formData.book_id));
-      const user = users.find(u => u.id === parseInt(formData.borrowed_from_id));
+      const bookId = parseInt(formData.book_id);
+      const userId = parseInt(formData.borrowed_from_id);
+      const book = books.find(b => b.id === bookId);
       
+      // Criar empréstimo
       await api.post("/loans", {
-        book_id: parseInt(formData.book_id),
-        borrowed_from_id: parseInt(formData.borrowed_from_id),
+        book_id: bookId,
+        borrowed_from_id: userId,
       });
-      alert(`✅ Empréstimo criado! Livro "${book?.title}" emprestado para ${user?.name}`);
+      
+      // Atualizar status do livro para "READING" (emprestado)
+      if (book) {
+        await api.patch(`/books/${book.id}`, { status: 'READING' });
+      }
+      
+      alert(`✅ Empréstimo criado! Livro "${book?.title}" emprestado para usuário #${userId}`);
       setFormData({ book_id: "", borrowed_from_id: "" });
       setIsModalOpen(false);
       fetchData();
@@ -86,8 +78,17 @@ export default function LoansPage() {
   const handleReturn = async (id: number) => {
     try {
       const loan = loans.find(l => l.id === id);
+      const book = books.find(b => b.id === loan?.book_id);
+      
+      // Marcar livro como devolvido
       await api.patch(`/loans/${id}/return`);
-      alert(`✅ Livro "${loan?.book.title}" marcado como devolvido!`);
+      
+      // Atualizar status do livro para "TO_READ" (padrão)
+      if (book) {
+        await api.patch(`/books/${book.id}`, { status: 'TO_READ' });
+      }
+      
+      alert(`✅ Livro "${book?.title}" marcado como devolvido!`);
       fetchData();
     } catch (err: any) {
       alert(`❌ Erro ao devolver livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
@@ -97,9 +98,16 @@ export default function LoansPage() {
 
   const handleDelete = async (id: number) => {
     const loan = loans.find(l => l.id === id);
-    if (window.confirm(`Tem certeza que deseja deletar o empréstimo de "${loan?.book.title}"?`)) {
+    const book = books.find(b => b.id === loan?.book_id);
+    if (window.confirm(`Tem certeza que deseja deletar o empréstimo de "${book?.title}"?`)) {
       try {
         await api.delete(`/loans/${id}`);
+        
+        // Se não estava retornado, atualizar status do livro
+        if (!loan?.isReturned && book) {
+          await api.patch(`/books/${book.id}`, { status: 'TO_READ' });
+        }
+        
         alert(`✅ Empréstimo deletado com sucesso!`);
         fetchData();
       } catch (err: any) {
@@ -134,57 +142,62 @@ export default function LoansPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-100 border-b">
-                <th className="px-6 py-3 text-left text-sm font-semibold">Livro</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Emprestado Para</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">ID Livro</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Título</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Emprestado Para (ID)</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Data Empréstimo</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {loans.map((loan) => (
-                <tr key={loan.id} className="border-b hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium">{loan.book.title}</p>
-                      <p className="text-sm text-gray-600">{loan.book.author}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{loan.borrowedFrom.name}</td>
-                  <td className="px-6 py-4">
-                    {new Date(loan.borrowedDate).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="px-6 py-4">
-                    {loan.isReturned ? (
-                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                        Devolvido
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                        Emprestado
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 flex gap-2">
-                    {!loan.isReturned && (
+              {loans.map((loan) => {
+                const book = books.find(b => b.id === loan.book_id);
+                return (
+                  <tr key={loan.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 font-bold text-gray-700 font-mono">{loan.book_id}</td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium">{book?.title || `Livro #${loan.book_id}`}</p>
+                        <p className="text-sm text-gray-600">{book?.author || 'Autor desconhecido'}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">Usuário #{loan.borrowed_from_id}</td>
+                    <td className="px-6 py-4">
+                      {new Date(loan.borrowedDate).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-6 py-4">
+                      {loan.isReturned ? (
+                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                          Devolvido
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
+                          Emprestado
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 flex gap-2">
+                      {!loan.isReturned && (
+                        <button
+                          onClick={() => handleReturn(loan.id)}
+                          className="text-green-600 hover:text-green-800 transition"
+                          title="Marcar como devolvido"
+                        >
+                          <Check size={18} />
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleReturn(loan.id)}
-                        className="text-green-600 hover:text-green-800 transition"
-                        title="Marcar como devolvido"
+                        onClick={() => handleDelete(loan.id)}
+                        className="text-red-600 hover:text-red-800 transition"
+                        title="Deletar"
                       >
-                        <Check size={18} />
+                        <Trash2 size={18} />
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(loan.id)}
-                      className="text-red-600 hover:text-red-800 transition"
-                      title="Deletar"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -197,58 +210,25 @@ export default function LoansPage() {
             <h2 className="text-2xl font-bold mb-4">Novo Empréstimo</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Selecionar Livro</label>
-                <select
+                <label className="block text-sm font-medium mb-1">ID do Livro</label>
+                <input
+                  type="number"
                   value={formData.book_id}
                   onChange={(e) => setFormData({ ...formData, book_id: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Ex: 1"
                   required
-                >
-                  <option value="">-- Escolha um livro --</option>
-                  {books.map((book) => (
-                    <option key={book.id} value={book.id}>
-                      {book.title} ({book.author})
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Quem vai pegar emprestado?</label>
-                <select
-                  value={formData.borrowed_from_id}
-                  onChange={(e) => setFormData({ ...formData, borrowed_from_id: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  required
-                >
-                  <option value="">-- Escolha um usuário --</option>
-                  {users.length > 0 ? (
-                    users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} ({user.email})
-                      </option>
-                    ))
-                  ) : (
-                    <option value="">Nenhum usuário disponível</option>
-                  )}
-                </select>
-                {users.length === 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Se não há usuários, use o ID do usuário desejado no campo abaixo
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Ou insira o ID do usuário diretamente
-                </label>
+                <label className="block text-sm font-medium mb-1">ID do Usuário (Quem vai pegar emprestado)</label>
                 <input
                   type="number"
-                  placeholder="ID do usuário"
                   value={formData.borrowed_from_id}
                   onChange={(e) => setFormData({ ...formData, borrowed_from_id: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Ex: 2"
                   required
                 />
               </div>

@@ -189,6 +189,7 @@ export default function BooksPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-100 border-b">
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">ID</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Título</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Autor</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Gênero</th>
@@ -200,6 +201,7 @@ export default function BooksPage() {
               <tbody>
                 {books.map((book: Book) => (
                   <tr key={book.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 font-bold text-gray-700 font-mono">{book.id}</td>
                     <td className="px-6 py-4 font-medium text-gray-900">{book.title}</td>
                     <td className="px-6 py-4 text-gray-600">{book.author}</td>
                     <td className="px-6 py-4 text-gray-600">{book.genre || "-"}</td>
