@@ -63,56 +63,81 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <LogIn className="w-8 h-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Cloud Library</h1>
-        </div>
-        
-        <p className="text-center text-gray-600 mb-6">Bem-vindo de volta!</p>
+    <div className="min-h-screen flex items-center justify-center gradient-blue p-4 relative overflow-hidden">
+      {/* Decorações de fundo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-10 animate-slide-in">
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg">
+            <LogIn className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+            Cloud Library
+          </h1>
+          <p className="text-gray-500 text-sm font-medium">Bem-vindo de volta!</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              E-mail
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              📧 E-mail
             </label>
             <input
               type="email"
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              🔒 Senha
             </label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full"
           >
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Entrando...
+              </span>
+            ) : (
+              'Entrar'
+            )}
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-gray-300 text-center">
+        <div className="mt-6 text-center">
+          <Link 
+            to="/forgot-password" 
+            className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+          >
+            🔑 Esqueceu sua senha?
+          </Link>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-600">
             Ainda não tem conta?{' '}
-            <Link to="/register" className="text-blue-600 hover:underline font-semibold">
-              Cadastre-se
+            <Link to="/register" className="text-blue-600 hover:text-blue-700 font-bold hover:underline transition-colors">
+              Cadastre-se agora
             </Link>
           </p>
         </div>

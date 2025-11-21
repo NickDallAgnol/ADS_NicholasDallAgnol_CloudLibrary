@@ -21,6 +21,7 @@ interface Book {
   author: string;
   status: 'TO_READ' | 'READING' | 'READ';
   progress: number;
+  availableForLoan: boolean;
 }
 
 interface Stats {
@@ -258,20 +259,33 @@ export function DashboardPage() {
                       <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded font-mono">ID: {book.id}</span>
                     </div>
                     <p className="text-gray-600">{book.author}</p>
-                    <span
-                      className={`inline-block mt-2 px-2 py-1 text-xs rounded ${book.status === 'TO_READ'
-                          ? 'bg-blue-100 text-blue-600'
+                    
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded ${book.status === 'TO_READ'
+                            ? 'bg-blue-100 text-blue-600'
+                            : book.status === 'READING'
+                              ? 'bg-yellow-100 text-yellow-600'
+                              : 'bg-green-100 text-green-600'
+                          }`}
+                      >
+                        {book.status === 'TO_READ'
+                          ? 'A Ler'
                           : book.status === 'READING'
-                            ? 'bg-yellow-100 text-yellow-600'
-                            : 'bg-green-100 text-green-600'
+                            ? 'Lendo'
+                            : 'Lido'}
+                      </span>
+                      
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded font-semibold ${
+                          book.availableForLoan
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
                         }`}
-                    >
-                      {book.status === 'TO_READ'
-                        ? 'A Ler'
-                        : book.status === 'READING'
-                          ? 'Lendo'
-                          : 'Lido'}
-                    </span>
+                      >
+                        {book.availableForLoan ? '✅ Disponível' : '📤 Emprestado'}
+                      </span>
+                    </div>
 
                     {/* Barra de progresso */}
                     <div className="mt-3">
@@ -300,16 +314,6 @@ export function DashboardPage() {
                         onChange={(e) =>
                           handleUpdateBook(book.id, book.status, Number(e.target.value))
                         }
-                        className="w-16 border px-2 py-1 rounded text-sm"
-                      />
-                      <span className="text-xs text-gray-500">%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 mt-4">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingBook(book.id)}
                         className="w-16 border px-2 py-1 rounded text-sm"
                       />
                       <span className="text-xs text-gray-500">%</span>

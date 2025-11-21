@@ -8,40 +8,55 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
+    let isMounted = true;
+
     async function checkAuth() {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setIsAuthenticated(false);
-        setIsChecking(false);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          setIsChecking(false);
+        }
         return;
       }
 
       try {
         // Validar token com o backend
-        await api.get('/auth/me');
-        setIsAuthenticated(true);
+        const response = await api.get('/auth/me');
+        if (isMounted && response.data) {
+          setIsAuthenticated(true);
+        }
       } catch (error) {
         // Token inválido ou expirado
-        console.error('Token inválido:', error);
+        console.error('Erro ao validar token:', error);
         localStorage.removeItem('token');
-        setIsAuthenticated(false);
+        if (isMounted) {
+          setIsAuthenticated(false);
+        }
       } finally {
-        setIsChecking(false);
+        if (isMounted) {
+          setIsChecking(false);
+        }
       }
     }
 
     checkAuth();
-  }, [location.pathname]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (isChecking) {
     // Mostrar loading enquanto verifica autenticação
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-500 to-blue-700">
-        <div className="bg-white rounded-lg shadow-xl p-8">
+      <div className="flex items-center justify-center h-screen gradient-blue">
+        <div className="card p-10 animate-slide-in">
           <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="text-gray-700 font-medium">Verificando autenticação...</p>
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-gray-700 font-semibold text-lg">Verificando autenticação...</p>
+            <p className="text-gray-500 text-sm">Aguarde um momento</p>
           </div>
         </div>
       </div>

@@ -6,6 +6,13 @@ interface Book {
   id: number;
   title: string;
   author: string;
+  availableForLoan?: boolean;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
 }
 
 interface Loan {
@@ -16,14 +23,18 @@ interface Loan {
   borrowedDate: string;
   returnDate?: string;
   isReturned: boolean;
+  borrowedFrom?: User;
+  book?: Book;
 }
 
 export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ book_id: "", borrowed_from_id: "" });
+  const [selectedBookId, setSelectedBookId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -34,11 +45,15 @@ export default function LoansPage() {
     try {
       // Buscar empréstimos
       const loansRes = await api.get("/loans");
-      setLoans(loansRes.data.data || []);
+      setLoans(loansRes.data.data || loansRes.data || []);
 
       // Buscar livros
       const booksRes = await api.get("/books");
-      setBooks(booksRes.data.data || []);
+      setBooks(booksRes.data.data || booksRes.data || []);
+
+      // Buscar usuários
+      const usersRes = await api.get("/users");
+      setUsers(usersRes.data || []);
     } catch (err: any) {
       alert("Erro ao carregar dados");
       console.error(err);
@@ -49,24 +64,27 @@ export default function LoansPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!selectedBookId || !selectedUserId) {
+      alert('❌ Selecione um livro e um usuário');
+      return;
+    }
+    
     try {
-      const bookId = parseInt(formData.book_id);
-      const userId = parseInt(formData.borrowed_from_id);
+      const bookId = parseInt(selectedBookId);
+      const userId = parseInt(selectedUserId);
       const book = books.find(b => b.id === bookId);
+      const user = users.find(u => u.id === userId);
       
-      // Criar empréstimo
+      // Criar empréstimo (backend já marca livro como indisponível)
       await api.post("/loans", {
         book_id: bookId,
         borrowed_from_id: userId,
       });
       
-      // Atualizar status do livro para "READING" (emprestado)
-      if (book) {
-        await api.patch(`/books/${book.id}`, { status: 'READING' });
-      }
-      
-      alert(`✅ Empréstimo criado! Livro "${book?.title}" emprestado para usuário #${userId}`);
-      setFormData({ book_id: "", borrowed_from_id: "" });
+      alert(`✅ Empréstimo criado!\nLivro: "${book?.title}"\nEmprestado para: ${user?.name} (ID: ${userId})`);
+      setSelectedBookId("");
+      setSelectedUserId("");
       setIsModalOpen(false);
       fetchData();
     } catch (err: any) {
@@ -80,13 +98,8 @@ export default function LoansPage() {
       const loan = loans.find(l => l.id === id);
       const book = books.find(b => b.id === loan?.book_id);
       
-      // Marcar livro como devolvido
+      // Marcar livro como devolvido (backend já marca como disponível)
       await api.patch(`/loans/${id}/return`);
-      
-      // Atualizar status do livro para "TO_READ" (padrão)
-      if (book) {
-        await api.patch(`/books/${book.id}`, { status: 'TO_READ' });
-      }
       
       alert(`✅ Livro "${book?.title}" marcado como devolvido!`);
       fetchData();
@@ -102,12 +115,6 @@ export default function LoansPage() {
     if (window.confirm(`Tem certeza que deseja deletar o empréstimo de "${book?.title}"?`)) {
       try {
         await api.delete(`/loans/${id}`);
-        
-        // Se não estava retornado, atualizar status do livro
-        if (!loan?.isReturned && book) {
-          await api.patch(`/books/${book.id}`, { status: 'TO_READ' });
-        }
-        
         alert(`✅ Empréstimo deletado com sucesso!`);
         fetchData();
       } catch (err: any) {
@@ -153,6 +160,7 @@ export default function LoansPage() {
             <tbody>
               {loans.map((loan) => {
                 const book = books.find(b => b.id === loan.book_id);
+                const borrower = users.find(u => u.id === loan.borrowed_from_id);
                 return (
                   <tr key={loan.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 font-bold text-gray-700 font-mono">{loan.book_id}</td>
@@ -162,18 +170,23 @@ export default function LoansPage() {
                         <p className="text-sm text-gray-600">{book?.author || 'Autor desconhecido'}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">Usuário #{loan.borrowed_from_id}</td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium">{borrower?.name || 'Usuário desconhecido'}</p>
+                        <p className="text-xs text-gray-500 font-mono">ID: {loan.borrowed_from_id}</p>
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       {new Date(loan.borrowedDate).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-6 py-4">
                       {loan.isReturned ? (
                         <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                          Devolvido
+                          ✅ Devolvido
                         </span>
                       ) : (
                         <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                          Emprestado
+                          📤 Emprestado
                         </span>
                       )}
                     </td>
@@ -206,46 +219,66 @@ export default function LoansPage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-2xl font-bold mb-4">Novo Empréstimo</h2>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
+            <h2 className="text-2xl font-bold mb-4">📕 Novo Empréstimo</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">ID do Livro</label>
-                <input
-                  type="number"
-                  value={formData.book_id}
-                  onChange={(e) => setFormData({ ...formData, book_id: e.target.value })}
+                <label className="block text-sm font-medium mb-2">📚 Selecione o Livro</label>
+                <select
+                  value={selectedBookId}
+                  onChange={(e) => setSelectedBookId(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  placeholder="Ex: 1"
                   required
-                />
+                >
+                  <option value="">-- Escolha um livro --</option>
+                  {books.map((book) => (
+                    <option key={book.id} value={book.id}>
+                      ID: {book.id} - {book.title} ({book.author})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Mostrando todos os seus livros disponíveis
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">ID do Usuário (Quem vai pegar emprestado)</label>
-                <input
-                  type="number"
-                  value={formData.borrowed_from_id}
-                  onChange={(e) => setFormData({ ...formData, borrowed_from_id: e.target.value })}
+                <label className="block text-sm font-medium mb-2">👤 Emprestado Para</label>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  placeholder="Ex: 2"
                   required
-                />
+                >
+                  <option value="">-- Escolha um usuário --</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} (ID: {user.id}) - {user.email}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Selecione quem vai pegar o livro emprestado
+                </p>
               </div>
 
               <div className="flex gap-2 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
                 >
-                  Registrar
+                  ✅ Registrar Empréstimo
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setSelectedBookId("");
+                    setSelectedUserId("");
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition font-semibold"
                 >
-                  Cancelar
+                  ❌ Cancelar
                 </button>
               </div>
             </form>

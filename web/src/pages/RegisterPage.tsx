@@ -71,68 +71,84 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-green-700 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <UserPlus className="w-8 h-8 text-green-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Cadastro</h1>
+    <div className="min-h-screen flex items-center justify-center gradient-green p-4 relative overflow-hidden">
+      {/* Decorações de fundo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+      </div>
+
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-10 animate-slide-in">
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <div className="p-4 bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl shadow-lg">
+            <UserPlus className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-700 bg-clip-text text-transparent">
+            Cadastro
+          </h1>
+          <p className="text-gray-500 text-sm font-medium">Crie sua conta na Cloud Library</p>
         </div>
 
-        <p className="text-center text-gray-600 mb-6">Crie sua conta na Cloud Library</p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome Completo
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              👤 Nome Completo
             </label>
             <input
               type="text"
               placeholder="Seu nome"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              E-mail
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              📧 E-mail
             </label>
             <input
               type="email"
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              🔒 Senha
             </label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="input"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-success w-full"
           >
-            {loading ? 'Criando conta...' : 'Criar Conta'}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Criando conta...
+              </span>
+            ) : (
+              '✨ Criar Conta'
+            )}
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-gray-300 text-center">
+        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-600">
             Já tem uma conta?{' '}
-            <Link to="/login" className="text-green-600 hover:underline font-semibold">
+            <Link to="/login" className="text-green-600 hover:text-green-700 font-bold hover:underline transition-colors">
               Faça login
             </Link>
           </p>

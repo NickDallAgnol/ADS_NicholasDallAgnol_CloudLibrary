@@ -1,50 +1,100 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { LogOut, User, BarChart3 } from "lucide-react";
+import { LogOut, User, BookOpen, FileText, Download } from "lucide-react";
 
 export function Header() {
   const { logout, user } = useAuth();
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
-      {/* Logo */}
-      <Link to="/dashboard" className="text-2xl font-bold flex items-center gap-2">
-        📚 Cloud Library
-      </Link>
-
-      {/* Navegação */}
-      <nav className="flex gap-8 items-center">
-        <Link to="/dashboard" className="hover:text-blue-200 transition flex items-center gap-2">
-          <User className="w-4 h-4" />
-          Livros
-        </Link>
-        <Link to="/loans" className="hover:text-blue-200 transition flex items-center gap-2">
-          <BarChart3 className="w-4 h-4" />
-          Empréstimos
-        </Link>
-        <Link to="/stats" className="hover:text-blue-200 transition flex items-center gap-2">
-          <BarChart3 className="w-4 h-4" />
-          Estatísticas
-        </Link>
-        <Link to="/profile" className="hover:text-blue-200 transition flex items-center gap-2">
-          <User className="w-4 h-4" />
-          Perfil
-        </Link>
-        {user && (
-          <span className="ml-4 px-3 py-1 bg-blue-900 rounded text-sm font-semibold">
-            {user.name}
+    <header className="bg-white border-b-2 border-gray-100 shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        {/* Logo */}
+        <Link 
+          to="/dashboard" 
+          className="text-2xl font-bold flex items-center gap-3 group"
+        >
+          <div className="p-2 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+            <BookOpen className="w-6 h-6 text-white" />
+          </div>
+          <span className="bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+            Cloud Library
           </span>
-        )}
-      </nav>
+        </Link>
 
-      {/* Botão de logout */}
-      <button
-        onClick={logout}
-        className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2"
-      >
-        <LogOut className="w-4 h-4" />
-        Sair
-      </button>
+        {/* Navegação */}
+        <nav className="flex gap-2 items-center">
+          <Link 
+            to="/dashboard" 
+            className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isActive('/dashboard')
+                ? 'bg-blue-100 text-blue-700 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            Biblioteca
+          </Link>
+          <Link 
+            to="/loans" 
+            className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isActive('/loans')
+                ? 'bg-blue-100 text-blue-700 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Empréstimos
+          </Link>
+          <Link 
+            to="/export" 
+            className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isActive('/export')
+                ? 'bg-blue-100 text-blue-700 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <Download className="w-4 h-4" />
+            Exportar
+          </Link>
+          <Link 
+            to="/profile" 
+            className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isActive('/profile')
+                ? 'bg-blue-100 text-blue-700 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            Perfil
+          </Link>
+        </nav>
+
+        <div className="flex items-center gap-4">
+          {/* User Badge */}
+          {user && user.name && (
+            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="font-semibold text-gray-700 text-sm">
+                {user.name}
+              </span>
+            </div>
+          )}
+
+          {/* Botão de logout */}
+          <button
+            onClick={logout}
+            className="btn-danger flex items-center gap-2 text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Sair
+          </button>
+        </div>
+      </div>
     </header>
   );
 }
