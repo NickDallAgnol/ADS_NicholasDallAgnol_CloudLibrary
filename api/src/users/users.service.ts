@@ -39,6 +39,12 @@ export class UsersService {
     if (updateUserDto.name !== undefined) user.name = updateUserDto.name;
     if (updateUserDto.email !== undefined) user.email = updateUserDto.email;
     if (updateUserDto.password !== undefined) user.password = updateUserDto.password;
+    if (updateUserDto.favoriteBook !== undefined) user.favoriteBook = updateUserDto.favoriteBook;
+    if (updateUserDto.favoriteAuthor !== undefined) user.favoriteAuthor = updateUserDto.favoriteAuthor;
+    if (updateUserDto.favoriteGenre !== undefined) user.favoriteGenre = updateUserDto.favoriteGenre;
+    if (updateUserDto.yearlyReadingGoal !== undefined) user.yearlyReadingGoal = updateUserDto.yearlyReadingGoal;
+    if (updateUserDto.bio !== undefined) user.bio = updateUserDto.bio;
+    if (updateUserDto.avatarUrl !== undefined) user.avatarUrl = updateUserDto.avatarUrl;
     
     return this.usersRepository.save(user);
   }

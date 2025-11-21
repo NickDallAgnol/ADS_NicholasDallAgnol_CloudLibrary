@@ -1,8 +1,9 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 
@@ -53,6 +54,24 @@ export class AuthService {
         name: user.name,
         email: user.email,
       },
+    };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const user = await this.usersService.findByEmail(resetPasswordDto.email);
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado com este e-mail');
+    }
+
+    const hashedPassword = await bcrypt.hash(resetPasswordDto.newPassword, 10);
+
+    await this.usersService.update(user.id, {
+      password: hashedPassword,
+    });
+
+    return {
+      message: 'Senha alterada com sucesso',
     };
   }
 

@@ -22,6 +22,24 @@ export class User {
   @Column()
   password!: string;
 
+  @Column({ nullable: true, length: 200 })
+  favoriteBook?: string;
+
+  @Column({ nullable: true, length: 100 })
+  favoriteAuthor?: string;
+
+  @Column({ nullable: true, length: 50 })
+  favoriteGenre?: string;
+
+  @Column({ nullable: true, type: 'int', default: 0 })
+  yearlyReadingGoal?: number;
+
+  @Column({ nullable: true, type: 'text' })
+  bio?: string;
+
+  @Column({ nullable: true, type: 'text' })
+  avatarUrl?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

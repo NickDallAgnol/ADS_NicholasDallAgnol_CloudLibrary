@@ -13,4 +13,27 @@ export class UpdateUserDto {
   @IsString()
   @MinLength(6, { message: 'A senha deve ter pelo menos 6 caracteres.' })
   password?: string;
+
+  @IsOptional()
+  @IsString()
+  favoriteBook?: string;
+
+  @IsOptional()
+  @IsString()
+  favoriteAuthor?: string;
+
+  @IsOptional()
+  @IsString()
+  favoriteGenre?: string;
+
+  @IsOptional()
+  yearlyReadingGoal?: number;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
 }

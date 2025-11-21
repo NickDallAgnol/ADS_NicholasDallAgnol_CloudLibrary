@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Loan } from './entities/loan.entity';
+import { Book } from '../books/entities/book.entity';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
 
@@ -10,6 +11,8 @@ export class LoansService {
   constructor(
     @InjectRepository(Loan)
     private readonly loansRepository: Repository<Loan>,
+    @InjectRepository(Book)
+    private readonly booksRepository: Repository<Book>,
   ) {}
 
   async create(userId: number, dto: CreateLoanDto): Promise<Loan> {
@@ -17,6 +20,14 @@ export class LoansService {
       ...dto,
       lentBy: { id: userId },
     });
+    
+    // Marca o livro como indisponível para empréstimo
+    const book = await this.booksRepository.findOne({ where: { id: dto.book_id } });
+    if (book) {
+      book.availableForLoan = false;
+      await this.booksRepository.save(book);
+    }
+    
     return this.loansRepository.save(loan);
   }
 
@@ -80,11 +91,29 @@ export class LoansService {
     const loan = await this.findOne(userId, id);
     loan.isReturned = true;
     loan.returnDate = new Date();
+    
+    // Marca o livro como disponível para empréstimo novamente
+    const book = await this.booksRepository.findOne({ where: { id: loan.book_id } });
+    if (book) {
+      book.availableForLoan = true;
+      await this.booksRepository.save(book);
+    }
+    
     return this.loansRepository.save(loan);
   }
 
   async remove(userId: number, id: number): Promise<void> {
     const loan = await this.findOne(userId, id);
+    
+    // Se o livro não foi devolvido, marca como disponível novamente
+    if (!loan.isReturned) {
+      const book = await this.booksRepository.findOne({ where: { id: loan.book_id } });
+      if (book) {
+        book.availableForLoan = true;
+        await this.booksRepository.save(book);
+      }
+    }
+    
     await this.loansRepository.remove(loan);
   }
 }
