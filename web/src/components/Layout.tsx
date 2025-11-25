@@ -3,7 +3,7 @@ import { Header } from "./Header";
 
 export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       <Header />
 
       {/* Conteúdo principal */}
@@ -14,13 +14,13 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600">
-              © {new Date().getFullYear()} <span className="font-semibold text-blue-600">Cloud Library</span> — Todos os direitos reservados
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              © {new Date().getFullYear()} <span className="font-semibold text-blue-600 dark:text-blue-400">Cloud Library</span> — Todos os direitos reservados
             </p>
-            <div className="flex gap-4 text-sm text-gray-500">
+            <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400">
               <span>📚 Gerencie sua biblioteca pessoal</span>
             </div>
           </div>

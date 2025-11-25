@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Check } from "lucide-react";
 import { api } from "../services/api";
+import toast from "react-hot-toast";
 
 interface Book {
   id: number;
@@ -43,7 +44,7 @@ export default function LoansPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Buscar empréstimos
+      // Buscar empréstimos (backend já filtra por usuário)
       const loansRes = await api.get("/loans");
       setLoans(loansRes.data.data || loansRes.data || []);
 
@@ -55,7 +56,7 @@ export default function LoansPage() {
       const usersRes = await api.get("/users");
       setUsers(usersRes.data || []);
     } catch (err: any) {
-      alert("Erro ao carregar dados");
+      toast.error("Erro ao carregar dados");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -66,7 +67,7 @@ export default function LoansPage() {
     e.preventDefault();
     
     if (!selectedBookId || !selectedUserId) {
-      alert('❌ Selecione um livro e um usuário');
+      toast.error('Selecione um livro e um usuário');
       return;
     }
     
@@ -82,13 +83,13 @@ export default function LoansPage() {
         borrowed_from_id: userId,
       });
       
-      alert(`✅ Empréstimo criado!\nLivro: "${book?.title}"\nEmprestado para: ${user?.name} (ID: ${userId})`);
+      toast.success(`Empréstimo criado!\nLivro: "${book?.title}"\nEmprestado para: ${user?.name}`);
       setSelectedBookId("");
       setSelectedUserId("");
       setIsModalOpen(false);
       fetchData();
     } catch (err: any) {
-      alert(`❌ Erro ao criar empréstimo: ${err.response?.data?.message || err.message || 'Verifique os dados'}`);
+      toast.error(`Erro ao criar empréstimo: ${err.response?.data?.message || err.message || 'Verifique os dados'}`);
       console.error(err);
     }
   };
@@ -101,10 +102,10 @@ export default function LoansPage() {
       // Marcar livro como devolvido (backend já marca como disponível)
       await api.patch(`/loans/${id}/return`);
       
-      alert(`✅ Livro "${book?.title}" marcado como devolvido!`);
+      toast.success(`Livro "${book?.title}" marcado como devolvido!`);
       fetchData();
     } catch (err: any) {
-      alert(`❌ Erro ao devolver livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
+      toast.error(`Erro ao devolver livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
       console.error(err);
     }
   };
@@ -115,10 +116,10 @@ export default function LoansPage() {
     if (window.confirm(`Tem certeza que deseja deletar o empréstimo de "${book?.title}"?`)) {
       try {
         await api.delete(`/loans/${id}`);
-        alert(`✅ Empréstimo deletado com sucesso!`);
+        toast.success(`Empréstimo deletado com sucesso!`);
         fetchData();
       } catch (err: any) {
-        alert(`❌ Erro ao deletar empréstimo: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
+        toast.error(`Erro ao deletar empréstimo: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
         console.error(err);
       }
     }
@@ -126,14 +127,17 @@ export default function LoansPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-4xl font-bold">📕 Empréstimos</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-        >
-          <Plus size={20} /> Novo Empréstimo
-        </button>
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-4xl font-bold">📕 Meus Empréstimos</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <Plus size={20} /> Novo Empréstimo
+          </button>
+        </div>
+        <p className="text-gray-600">Livros que você emprestou para outras pessoas</p>
       </div>
 
       {isLoading ? (
@@ -153,6 +157,7 @@ export default function LoansPage() {
                 <th className="px-6 py-3 text-left text-sm font-semibold">Título</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Emprestado Para (ID)</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Data Empréstimo</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Data Devolução</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Ações</th>
               </tr>
@@ -178,6 +183,12 @@ export default function LoansPage() {
                     </td>
                     <td className="px-6 py-4">
                       {new Date(loan.borrowedDate).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-6 py-4">
+                      {loan.returnDate 
+                        ? new Date(loan.returnDate).toLocaleDateString("pt-BR")
+                        : <span className="text-gray-400">-</span>
+                      }
                     </td>
                     <td className="px-6 py-4">
                       {loan.isReturned ? (

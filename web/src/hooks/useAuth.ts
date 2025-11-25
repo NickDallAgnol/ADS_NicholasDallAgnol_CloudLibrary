@@ -14,22 +14,49 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
+  const loadUser = async () => {
     const token = localStorage.getItem('token');
     if (token) {
-      setIsAuthenticated(true);
-      api.get('/auth/me')
-        .then(res => setUser(res.data))
-        .catch(() => {
-          setIsAuthenticated(false);
-          setUser(null);
-          localStorage.removeItem('token');
-        });
+      try {
+        const res = await api.get('/auth/me');
+        setUser(res.data);
+        setIsAuthenticated(true);
+      } catch {
+        setIsAuthenticated(false);
+        setUser(null);
+        localStorage.removeItem('token');
+      }
     } else {
       setIsAuthenticated(false);
       setUser(null);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    loadUser();
+
+    // Listener para detectar mudanças no localStorage de outras abas
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token') {
+        // Token foi alterado em outra aba
+        if (e.newValue) {
+          // Novo login em outra aba - recarregar usuário
+          loadUser();
+        } else {
+          // Logout em outra aba - fazer logout aqui também
+          setIsAuthenticated(false);
+          setUser(null);
+          navigate('/login', { replace: true });
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [navigate]);
 
   function logout() {
     localStorage.removeItem('token');

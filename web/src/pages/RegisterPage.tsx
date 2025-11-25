@@ -1,12 +1,17 @@
 import { useState, FormEvent, useEffect } from "react";
 import { api } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -27,25 +32,41 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validações
+    // Validações básicas no frontend
     if (!name.trim()) {
-      alert('Nome é obrigatório');
+      toast.error('Nome é obrigatório');
       return;
     }
     if (!email) {
-      alert('E-mail é obrigatório');
+      toast.error('E-mail é obrigatório');
       return;
     }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      alert('Digite um e-mail válido');
+    
+    // Validação de domínio real
+    const validDomainPattern = /^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail|yahoo|icloud|protonmail|live|msn|aol|zoho|mail|yandex|tutanota)\.(com|br|net|org|co\.uk|de|fr|es|it|pt)$/i;
+    if (!validDomainPattern.test(email)) {
+      toast.error('Use um email de provedor válido (Gmail, Outlook, Yahoo, Hotmail, etc.)');
       return;
     }
+    
     if (!password) {
-      alert('Senha é obrigatória');
+      toast.error('Senha é obrigatória');
       return;
     }
     if (password.length < 6) {
-      alert('A senha deve ter pelo menos 6 caracteres');
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    
+    // Validação de senha forte
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/.test(password)) {
+      toast.error('A senha deve conter pelo menos uma letra e um número');
+      return;
+    }
+
+    // Validação de confirmação de senha
+    if (password !== confirmPassword) {
+      toast.error('As senhas não coincidem');
       return;
     }
 
@@ -56,14 +77,18 @@ export default function RegisterPage() {
         email,
         password,
       });
-      alert("Usuário registrado com sucesso! Faça login.");
+      toast.success("Usuário registrado com sucesso! Faça login.");
       navigate("/login");
     } catch (err: any) {
       console.error(err);
       if (err.response?.data?.message) {
-        alert(err.response.data.message);
+        // Se for array de mensagens, exibe todas
+        const message = Array.isArray(err.response.data.message) 
+          ? err.response.data.message.join('\n')
+          : err.response.data.message;
+        toast.error(message);
       } else {
-        alert("Erro ao registrar usuário");
+        toast.error("Erro ao registrar usuário");
       }
     } finally {
       setLoading(false);
@@ -109,24 +134,58 @@ export default function RegisterPage() {
             </label>
             <input
               type="email"
-              placeholder="seu@email.com"
+              placeholder="exemplo@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input"
             />
+            <p className="text-xs text-gray-500 mt-1">Use um email de provedor válido (Gmail, Outlook, Yahoo, etc.)</p>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               🔒 Senha
             </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres com letras e números</p>
+            <PasswordStrengthIndicator password={password} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              🔒 Confirmar Senha
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="input pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button

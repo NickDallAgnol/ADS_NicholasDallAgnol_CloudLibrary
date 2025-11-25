@@ -39,12 +39,14 @@ export class LoansService {
   }> {
     const { page = 1, limit = 10, returnedOnly = false } = query;
 
+    // Mostrar apenas empréstimos onde o usuário é o DONO do livro (lent_by)
+    // Ou seja, livros que ELE emprestou para outros
     const qb = this.loansRepository
       .createQueryBuilder('loan')
       .leftJoinAndSelect('loan.lentBy', 'lentBy')
       .leftJoinAndSelect('loan.borrowedFrom', 'borrowedFrom')
-      .where('loan.lent_by_id = :userId', { userId })
-      .orWhere('loan.borrowed_from_id = :userId', { userId });
+      .leftJoinAndSelect('loan.book', 'book')
+      .where('loan.lent_by_id = :userId', { userId });
 
     if (returnedOnly) {
       qb.andWhere('loan.is_returned = true');
@@ -66,10 +68,11 @@ export class LoansService {
   async findOne(userId: number, id: number): Promise<Loan> {
     const loan = await this.loansRepository.findOne({
       where: { id },
-      relations: ['lentBy', 'borrowedFrom'],
+      relations: ['lentBy', 'borrowedFrom', 'book'],
     });
 
-    if (!loan || (loan.lent_by_id !== userId && loan.borrowed_from_id !== userId)) {
+    // Verificar se o usuário é o DONO do livro (lent_by)
+    if (!loan || loan.lent_by_id !== userId) {
       throw new NotFoundException('Empréstimo não encontrado');
     }
 

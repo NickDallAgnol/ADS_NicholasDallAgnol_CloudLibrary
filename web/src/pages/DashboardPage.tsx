@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
-import { BookForm } from '../components/BookForm';
-import { EditBookForm } from '../components/EditBookForm';
 import { Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,19 +8,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { BookOpen, TrendingUp, CheckCircle, Clock, Upload } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
-interface Book {
-  id: number;
-  title: string;
-  author: string;
-  status: 'TO_READ' | 'READING' | 'READ';
-  progress: number;
-  availableForLoan: boolean;
-}
 
 interface Stats {
   total: number;
@@ -31,374 +20,252 @@ interface Stats {
   read: number;
 }
 
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  availableForLoan: boolean;
+}
+
+interface LoanStats {
+  emprestados: number;
+  pegueiEmprestado: number;
+}
+
 export function DashboardPage() {
-  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingBook, setEditingBook] = useState<number | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
-
-  // filtros, paginação e ordenação
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-
-  async function fetchBooks() {
-    try {
-      setLoading(true);
-      const res = await api.get('/books', {
-        params: {
-          q: search,
-          status: statusFilter,
-          page,
-          limit: 6,
-          sortBy,
-          order,
-        },
-      });
-
-      setBooks(res.data.data);
-      setTotalPages(res.data.totalPages);
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao carregar livros');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loanStats, setLoanStats] = useState<LoanStats>({ emprestados: 0, pegueiEmprestado: 0 });
 
   async function fetchStats() {
     try {
+      setLoading(true);
       const res = await api.get<Stats>('/books/stats/overview');
       setStats(res.data);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar estatísticas');
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function handleDelete(id: number) {
+  async function fetchBooks() {
     try {
-      await api.delete(`/books/${id}`);
-      toast.success('Livro removido com sucesso!');
-      fetchBooks();
-      fetchStats();
+      const res = await api.get('/books');
+      setBooks(res.data.data || res.data || []);
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao remover livro');
     }
   }
 
-  async function handleUpdateBook(
-    id: number,
-    status?: 'TO_READ' | 'READING' | 'READ',
-    progress?: number
-  ) {
+  async function fetchLoanStats() {
     try {
-      await api.patch(`/books/${id}`, { status, progress });
-      toast.success('Livro atualizado!');
-      fetchBooks();
-      fetchStats();
+      const res = await api.get('/loans');
+      const loans = res.data.data || res.data || [];
+      
+      // Contar empréstimos onde o usuário é o dono do livro (lent_by)
+      const emprestados = loans.filter((l: any) => !l.isReturned).length;
+      
+      setLoanStats({ emprestados, pegueiEmprestado: 0 });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao atualizar livro');
     }
   }
 
   useEffect(() => {
-    fetchBooks();
     fetchStats();
-  }, [page, sortBy, order]);
+    fetchBooks();
+    fetchLoanStats();
+  }, []);
+
+  const chartData = stats
+    ? {
+        labels: ['A Ler', 'Lendo', 'Lido'],
+        datasets: [
+          {
+            data: [stats.toRead, stats.reading, stats.read],
+            backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+            borderWidth: 2,
+            borderColor: '#fff',
+          },
+        ],
+      }
+    : null;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">📚 Meus Livros</h1>
-
-      {/* Estatísticas */}
-      {stats && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8 bg-white shadow rounded p-6"
-        >
-          <h2 className="text-xl font-semibold mb-4">📊 Estatísticas</h2>
-          <p className="mb-4">Total de livros: {stats.total}</p>
-          <div className="max-w-sm">
-            <Pie
-              data={{
-                labels: ['A Ler', 'Lendo', 'Lido'],
-                datasets: [
-                  {
-                    data: [stats.toRead, stats.reading, stats.read],
-                    backgroundColor: ['#f39c12', '#3498db', '#2ecc71'],
-                  },
-                ],
-              }}
-            />
-          </div>
-        </motion.div>
-      )}
-
-      {/* Formulário de criação */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <BookForm
-          onSuccess={() => {
-            fetchBooks();
-            fetchStats();
-          }}
-        />
-      </motion.div>
-
-      {/* Filtros e ordenação */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 mt-8">
-        <input
-          type="text"
-          placeholder="Buscar por título ou autor..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
-        />
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="">Todos</option>
-          <option value="TO_READ">A Ler</option>
-          <option value="READING">Lendo</option>
-          <option value="READ">Lido</option>
-        </select>
-
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="createdAt">Data</option>
-          <option value="title">Título</option>
-          <option value="author">Autor</option>
-        </select>
-
-        <select
-          value={order}
-          onChange={(e) => setOrder(e.target.value as 'asc' | 'desc')}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="asc">Ascendente</option>
-          <option value="desc">Descendente</option>
-        </select>
-
-        <button
-          onClick={() => {
-            setPage(1);
-            fetchBooks();
-          }}
-          className="bg-purple-600 text-white px-4 py-2 rounded"
-        >
-          Ordenar
-        </button>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2">📊 Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-300">Bem-vindo! A Cloud Library está aqui para ajudar você a gerenciar seus livros de forma eficiente.</p>
       </div>
 
-      {/* Listagem */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Lista de Livros</h2>
-
-        {loading && (
-          <div className="flex justify-center items-center py-8">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-            >
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-            </motion.div>
-          </div>
-        )}
-
-        {!loading && books.length === 0 && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-gray-500"
-          >
-            Nenhum livro encontrado.
-          </motion.p>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {books.map((book) => (
-            <motion.div
-              key={book.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white shadow rounded p-4"
-            >
-              {editingBook === book.id ? (
-                <EditBookForm
-                  book={book}
-                  onSuccess={() => {
-                    setEditingBook(null);
-                    fetchBooks();
-                    fetchStats();
-                  }}
-                  onCancel={() => setEditingBook(null)}
-                />
-              ) : (
-                <div className="flex flex-col justify-between h-full">
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <>
+          {/* Cards de Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-lg font-bold">{book.title}</h3>
-                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded font-mono">ID: {book.id}</span>
-                    </div>
-                    <p className="text-gray-600">{book.author}</p>
-                    
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded ${book.status === 'TO_READ'
-                            ? 'bg-blue-100 text-blue-600'
-                            : book.status === 'READING'
-                              ? 'bg-yellow-100 text-yellow-600'
-                              : 'bg-green-100 text-green-600'
-                          }`}
-                      >
-                        {book.status === 'TO_READ'
-                          ? 'A Ler'
-                          : book.status === 'READING'
-                            ? 'Lendo'
-                            : 'Lido'}
-                      </span>
-                      
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded font-semibold ${
-                          book.availableForLoan
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {book.availableForLoan ? '✅ Disponível' : '📤 Emprestado'}
-                      </span>
-                    </div>
-
-                    {/* Barra de progresso */}
-                    <div className="mt-3">
-                      <label className="text-xs text-gray-500">Progresso de leitura</label>
-                      <div className="w-full bg-gray-200 rounded h-3 mt-1">
-                        <div
-                          className={`h-3 rounded ${book.progress < 33
-                              ? 'bg-red-400'
-                              : book.progress < 66
-                                ? 'bg-yellow-400'
-                                : 'bg-green-500'
-                            }`}
-                          style={{ width: `${book.progress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">{book.progress}%</p>
-                    </div>
-
-                    {/* Input para atualizar progresso */}
-                    <div className="mt-2 flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={book.progress}
-                        onChange={(e) =>
-                          handleUpdateBook(book.id, book.status, Number(e.target.value))
-                        }
-                        className="w-16 border px-2 py-1 rounded text-sm"
-                      />
-                      <span className="text-xs text-gray-500">%</span>
-                    </div>
+                    <p className="text-blue-100 text-sm font-medium mb-1">Total de Livros</p>
+                    <h3 className="text-4xl font-bold">{stats?.total || 0}</h3>
                   </div>
-
-                  <div className="flex flex-col gap-2 mt-4">
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setEditingBook(book.id)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                      >
-                        Editar
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDelete(book.id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                      >
-                        Excluir
-                      </motion.button>
-                    </div>
-
-                    {/* Botões de atualização rápida de status */}
-                    <div className="flex flex-wrap gap-2">
-                      {book.status !== 'TO_READ' && (
-                        <button
-                          onClick={() => handleUpdateBook(book.id, 'TO_READ')}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
-                        >
-                          Marcar como A Ler
-                        </button>
-                      )}
-                      {book.status !== 'READING' && (
-                        <button
-                          onClick={() => handleUpdateBook(book.id, 'READING')}
-                          className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
-                        >
-                          Marcar como Lendo
-                        </button>
-                      )}
-                      {book.status !== 'READ' && (
-                        <button
-                          onClick={() => handleUpdateBook(book.id, 'READ')}
-                          className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
-                        >
-                          Marcar como Lido
-                        </button>
-                      )}
-                    </div>
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <BookOpen size={32} />
                   </div>
                 </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
+              </div>
+            </div>
 
-        {/* Paginação */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-4 mt-6">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Anterior
-            </button>
+            <div className="card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-yellow-100 text-sm font-medium mb-1">A Ler</p>
+                    <h3 className="text-4xl font-bold">{stats?.toRead || 0}</h3>
+                  </div>
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <Clock size={32} />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <span>
-              Página {page} de {totalPages}
-            </span>
+            <div className="card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium mb-1">Lendo</p>
+                    <h3 className="text-4xl font-bold">{stats?.reading || 0}</h3>
+                  </div>
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <TrendingUp size={32} />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Próxima
-            </button>
+            <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium mb-1">Lidos</p>
+                    <h3 className="text-4xl font-bold">{stats?.read || 0}</h3>
+                  </div>
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <CheckCircle size={32} />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Gráfico e Ações Rápidas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico */}
+            <div className="card">
+              <div className="card-header">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Distribuição de Leitura</h2>
+              </div>
+              <div className="card-body">
+                {chartData && stats && stats.total > 0 ? (
+                  <div className="h-64 flex items-center justify-center">
+                    <Pie data={chartData} options={{ maintainAspectRatio: true }} />
+                  </div>
+                ) : (
+                  <div className="h-64 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <BookOpen size={48} className="mb-4 text-gray-300 dark:text-gray-600" />
+                    <p>Nenhum livro cadastrado ainda</p>
+                    <Link to="/books" className="btn-primary mt-4">
+                      Adicionar primeiro livro
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Status de Disponibilidade */}
+            <div className="card">
+              <div className="card-header">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Status dos Livros</h2>
+              </div>
+              <div className="card-body space-y-4">
+                {/* Livros Disponíveis */}
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                        <CheckCircle size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-green-800 dark:text-green-300">Livros Disponíveis</h3>
+                        <p className="text-sm text-green-600 dark:text-green-400">Prontos para leitura ou empréstimo</p>
+                      </div>
+                    </div>
+                    <span className="text-3xl font-bold text-green-700 dark:text-green-400">
+                      {books.filter(b => b.availableForLoan).length}
+                    </span>
+                  </div>
+                  <Link 
+                    to="/books" 
+                    className="text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 text-sm font-semibold flex items-center gap-1"
+                  >
+                    Ver todos os livros →
+                  </Link>
+                </div>
+
+                {/* Livros Emprestados */}
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-2 border-orange-200 dark:border-orange-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                        <Upload size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-orange-800 dark:text-orange-300">Livros Emprestados</h3>
+                        <p className="text-sm text-orange-600 dark:text-orange-400">Que você emprestou para outros</p>
+                      </div>
+                    </div>
+                    <span className="text-3xl font-bold text-orange-700 dark:text-orange-400">
+                      {loanStats.emprestados}
+                    </span>
+                  </div>
+                  <Link 
+                    to="/loans" 
+                    className="text-orange-700 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 text-sm font-semibold flex items-center gap-1"
+                  >
+                    Gerenciar empréstimos →
+                  </Link>
+                </div>
+
+                {/* Total de Livros Indisponíveis */}
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                        <BookOpen size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-red-800 dark:text-red-300">Indisponíveis</h3>
+                        <p className="text-sm text-red-600 dark:text-red-400">Livros não disponíveis no momento</p>
+                      </div>
+                    </div>
+                    <span className="text-3xl font-bold text-red-700 dark:text-red-400">
+                      {books.filter(b => !b.availableForLoan).length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

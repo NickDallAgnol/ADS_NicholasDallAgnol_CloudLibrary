@@ -1,8 +1,11 @@
 // src/services/api.ts
 import axios from 'axios';
 
+// Usar variável de ambiente ou fallback para localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: API_URL,
 });
 
 // Interceptor para adicionar token nas requisições

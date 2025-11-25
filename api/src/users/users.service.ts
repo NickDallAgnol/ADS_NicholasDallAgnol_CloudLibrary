@@ -48,4 +48,54 @@ export class UsersService {
     
     return this.usersRepository.save(user);
   }
+
+  // MÉTODOS COMENTADOS POR SEGURANÇA
+  // Não devem estar disponíveis em produção
+  // Descomentar apenas para desenvolvimento/testes quando necessário
+  
+  /*
+  async resetDatabase(): Promise<any> {
+    // ⚠️ PERIGOSO: Deleta TODOS os dados
+    await this.usersRepository.query('DELETE FROM loans');
+    await this.usersRepository.query('DELETE FROM books');
+    await this.usersRepository.query('DELETE FROM users');
+    
+    await this.usersRepository.query('ALTER SEQUENCE users_id_seq RESTART WITH 1');
+    await this.usersRepository.query('ALTER SEQUENCE books_id_seq RESTART WITH 1');
+    await this.usersRepository.query('ALTER SEQUENCE loans_id_seq RESTART WITH 1');
+    
+    return {
+      message: 'Banco de dados limpo com sucesso!',
+      deletedTables: ['loans', 'books', 'users'],
+      sequencesReset: true
+    };
+  }
+
+  async deleteInvalidUsers(): Promise<any> {
+    const validDomainPattern = /^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail|yahoo|icloud|protonmail|live|msn|aol|zoho|mail|yandex|tutanota)\.(com|br|net|org|co\.uk|de|fr|es|it|pt)$/i;
+    
+    const allUsers = await this.usersRepository.find();
+    const invalidUsers: any[] = [];
+    const validUsers: any[] = [];
+    
+    for (const user of allUsers) {
+      if (!validDomainPattern.test(user.email)) {
+        invalidUsers.push({ id: user.id, name: user.name, email: user.email });
+        await this.usersRepository.delete(user.id);
+      } else {
+        validUsers.push({ id: user.id, name: user.name, email: user.email });
+      }
+    }
+    
+    return {
+      message: `${invalidUsers.length} usuário(s) inválido(s) removido(s)`,
+      deletedUsers: invalidUsers,
+      remainingUsers: validUsers,
+      total: {
+        deleted: invalidUsers.length,
+        remaining: validUsers.length
+      }
+    };
+  }
+  */
 }

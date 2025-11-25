@@ -1,11 +1,13 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { api } from '../services/api';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { LogIn, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,19 +31,19 @@ export function LoginPage() {
 
     // 🔎 Validações antes de enviar
     if (!email) {
-      alert('O e-mail é obrigatório');
+      toast.error('O e-mail é obrigatório');
       return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      alert('Digite um e-mail válido');
+      toast.error('Digite um e-mail válido');
       return;
     }
     if (!password) {
-      alert('A senha é obrigatória');
+      toast.error('A senha é obrigatória');
       return;
     }
     if (password.length < 6) {
-      alert('A senha deve ter pelo menos 6 caracteres');
+      toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
@@ -49,14 +51,14 @@ export function LoginPage() {
       setLoading(true);
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.access_token);
-      alert('Login realizado com sucesso!');
+      toast.success('Login realizado com sucesso!');
       
       // Redirecionar para a página que o usuário tentou acessar ou dashboard
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (err) {
       console.error(err);
-      alert('Credenciais inválidas');
+      toast.error('Credenciais inválidas');
     } finally {
       setLoading(false);
     }
@@ -99,13 +101,22 @@ export function LoginPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               🔒 Senha
             </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button

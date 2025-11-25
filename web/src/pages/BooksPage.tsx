@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useBooks, useCreateBook, useUpdateBook, useDeleteBook, type Book } from "../hooks/useBooks";
 import { Plus, Edit2, Trash2, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function BooksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,7 +68,7 @@ export default function BooksPage() {
     e.preventDefault();
 
     if (!formData.title || !formData.author) {
-      alert("Preencha título e autor!");
+      toast.error("Preencha título e autor!");
       return;
     }
 
@@ -77,15 +78,15 @@ export default function BooksPage() {
           id: editingBook.id,
           payload: formData,
         });
-        alert(`✅ Livro "${formData.title}" atualizado com sucesso!`);
+        toast.success(`Livro "${formData.title}" atualizado com sucesso!`);
       } else {
         await createBook.mutateAsync(formData);
-        alert(`✅ Livro "${formData.title}" criado com sucesso!`);
+        toast.success(`Livro "${formData.title}" criado com sucesso!`);
       }
       closeModal();
       refresh();
     } catch (err: any) {
-      alert(`❌ Erro ao salvar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
+      toast.error(`Erro ao salvar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
     }
   };
 
@@ -94,10 +95,10 @@ export default function BooksPage() {
     if (window.confirm(`Tem certeza que deseja deletar "${bookTitle}"?`)) {
       try {
         await deleteBook.mutateAsync(id);
-        alert(`✅ Livro "${bookTitle}" deletado com sucesso!`);
+        toast.success(`Livro "${bookTitle}" deletado com sucesso!`);
         refresh();
       } catch (err: any) {
-        alert(`❌ Erro ao deletar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
+        toast.error(`Erro ao deletar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
       }
     }
   };

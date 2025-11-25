@@ -35,7 +35,18 @@ export function Header() {
             }`}
           >
             <BookOpen className="w-4 h-4" />
-            Biblioteca
+            Dashboard
+          </Link>
+          <Link 
+            to="/books" 
+            className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isActive('/books')
+                ? 'bg-blue-100 text-blue-700 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            Livros
           </Link>
           <Link 
             to="/loans" 

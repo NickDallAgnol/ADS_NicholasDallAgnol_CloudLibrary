@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import Layout from "./components/Layout";
-import LoginPage from "./pages/LoginPage";
+import { LoginPage } from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { RequireAuth } from "./components/RequireAuth";
@@ -72,10 +72,8 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
-        {/* Redirecionamento padrão para login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        
-        {/* Qualquer rota não encontrada redireciona para login */}
+        {/* Redirecionamento padrão */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
