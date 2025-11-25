@@ -34,7 +34,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Request() req: ExpressRequest) {
-    return req.user;
+  async getProfile(@Request() req: ExpressRequest) {
+    // Buscar dados atualizados do banco ao invés de usar o token
+    const userId = (req.user as any).id;
+    return this.authService.getUserById(userId);
   }
 }

@@ -24,3 +24,4 @@ export function LoadingOverlay({ text = 'Carregando...' }: { text?: string }) {
 }
 
 export default LoadingSpinner;
+

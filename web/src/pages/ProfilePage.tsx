@@ -1,5 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { api } from '../services/api';
+import toast from 'react-hot-toast';
+import { BarChart3, Library, BookOpen, CheckCircle, Clock, ArrowUpFromLine, ArrowDownToLine, Calendar, User, BookMarked, Lock } from 'lucide-react';
 
 interface User {
   id: number;
@@ -55,7 +57,7 @@ export function ProfilePage() {
         setBio(res.data.bio || '');
       } catch (err) {
         console.error(err);
-        alert('Erro ao carregar perfil.');
+        toast.error('Erro ao carregar perfil.');
       }
     }
 
@@ -91,11 +93,11 @@ export function ProfilePage() {
     e.preventDefault();
     
     if (!name.trim()) {
-      alert('O nome é obrigatório');
+      toast.error('O nome é obrigatório');
       return;
     }
     if (!email.trim()) {
-      alert('O e-mail é obrigatório');
+      toast.error('O e-mail é obrigatório');
       return;
     }
 
@@ -110,14 +112,25 @@ export function ProfilePage() {
         yearlyReadingGoal: yearlyReadingGoal > 0 ? yearlyReadingGoal : undefined,
         bio: bio?.trim() || undefined,
       });
-      setUser(res.data);
+      
+      // Atualizar o estado com os dados salvos
+      const updatedUser = res.data;
+      setUser(updatedUser);
+      setName(updatedUser.name);
+      setEmail(updatedUser.email);
+      setFavoriteBook(updatedUser.favoriteBook || '');
+      setFavoriteAuthor(updatedUser.favoriteAuthor || '');
+      setFavoriteGenre(updatedUser.favoriteGenre || '');
+      setYearlyReadingGoal(updatedUser.yearlyReadingGoal || 0);
+      setBio(updatedUser.bio || '');
+      
       setIsEditing(false);
-      alert('✅ Perfil atualizado com sucesso!');
       setPassword('');
+      toast.success('Perfil atualizado com sucesso!');
     } catch (err: any) {
       console.error(err);
       const errorMessage = err?.response?.data?.message || 'Erro ao atualizar perfil.';
-      alert('❌ ' + errorMessage);
+      toast.error(errorMessage);
     }
   }
 
@@ -137,11 +150,13 @@ export function ProfilePage() {
             </h1>
             <p className="text-gray-600 mb-1">✉️ {user.email}</p>
             <div className="flex gap-2 items-center">
-              <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
-                🆔 ID: {user.id}
+              <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                <User className="w-3 h-3" />
+                ID: {user.id}
               </span>
-              <span className="text-sm text-gray-500">
-                📅 Membro desde {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+              <span className="text-sm text-gray-500 flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                Membro desde {new Date(user.createdAt).toLocaleDateString('pt-BR')}
               </span>
             </div>
           </div>
@@ -149,9 +164,10 @@ export function ProfilePage() {
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold flex items-center gap-2"
           >
-            ✏️ Editar Perfil
+            <User className="w-5 h-5" />
+            Editar Perfil
           </button>
         )}
       </div>
@@ -161,24 +177,37 @@ export function ProfilePage() {
         {stats && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              📊 Estatísticas de Leitura
+              <BarChart3 className="w-5 h-5" />
+              Estatísticas de Leitura
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-lg p-4 text-center border-2 border-gray-200">
                 <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
-                <p className="text-sm text-gray-600 mt-1">📚 Total</p>
+                <p className="text-sm text-gray-600 mt-1 flex items-center justify-center gap-1">
+                  <Library className="w-4 h-4" />
+                  Total
+                </p>
               </div>
-              <div className="bg-blue-50 rounded-lg p-4 text-center border-2 border-blue-200">
+              <div className="bg-blue-50 rounded-lg p-4 text-center border-2 border-b">
                 <p className="text-3xl font-bold text-blue-600">{stats.toRead}</p>
-                <p className="text-sm text-blue-600 mt-1">📖 A Ler</p>
+                <p className="text-sm text-blue-600 mt-1 flex items-center justify-center gap-1">
+                  <BookOpen className="w-4 h-4" />
+                  A Ler
+                </p>
               </div>
               <div className="bg-yellow-50 rounded-lg p-4 text-center border-2 border-yellow-200">
                 <p className="text-3xl font-bold text-yellow-600">{stats.reading}</p>
-                <p className="text-sm text-yellow-600 mt-1">📗 Lendo</p>
+                <p className="text-sm text-yellow-600 mt-1 flex items-center justify-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  Lendo
+                </p>
               </div>
               <div className="bg-green-50 rounded-lg p-4 text-center border-2 border-green-200">
                 <p className="text-3xl font-bold text-green-600">{stats.read}</p>
-                <p className="text-sm text-green-600 mt-1">✅ Lidos</p>
+                <p className="text-sm text-green-600 mt-1 flex items-center justify-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  Lidos
+                </p>
               </div>
             </div>
           </div>
@@ -188,17 +217,24 @@ export function ProfilePage() {
         {loanStats && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              🤝 Estatísticas de Empréstimos
+              <ArrowUpFromLine className="w-5 h-5" />
+              Estatísticas de Empréstimos
             </h2>
             <div className="space-y-3">
               <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-200">
                 <p className="text-4xl font-bold text-orange-600 text-center">{loanStats.lentByMe}</p>
-                <p className="text-sm text-orange-700 font-semibold text-center mt-2">📤 Emprestei</p>
+                <p className="text-sm text-orange-700 font-semibold text-center mt-2 flex items-center justify-center gap-1">
+                  <ArrowUpFromLine className="w-4 h-4" />
+                  Emprestei
+                </p>
                 <p className="text-xs text-gray-600 text-center mt-1">Livros emprestados para outros</p>
               </div>
               <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
                 <p className="text-4xl font-bold text-purple-600 text-center">{loanStats.borrowedByMe}</p>
-                <p className="text-sm text-purple-700 font-semibold text-center mt-2">📥 Peguei Emprestado</p>
+                <p className="text-sm text-purple-700 font-semibold text-center mt-2 flex items-center justify-center gap-1">
+                  <ArrowDownToLine className="w-4 h-4" />
+                  Peguei Emprestado
+                </p>
                 <p className="text-xs text-gray-600 text-center mt-1">Livros que peguei de outros</p>
               </div>
             </div>
@@ -209,22 +245,37 @@ export function ProfilePage() {
       {/* Informações do Perfil */}
       {!isEditing && (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-6">📚 Preferências de Leitura</h2>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Library className="w-6 h-6" />
+            Preferências de Leitura
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">📖 Livro Favorito</label>
+              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                <BookMarked className="w-4 h-4" />
+                Livro Favorito
+              </label>
               <p className="text-lg mt-1">{user.favoriteBook || '—'}</p>
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">✍️ Autor Favorito</label>
+              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Autor Favorito
+              </label>
               <p className="text-lg mt-1">{user.favoriteAuthor || '—'}</p>
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">🎭 Gênero Preferido</label>
+              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Gênero Preferido
+              </label>
               <p className="text-lg mt-1">{user.favoriteGenre || '—'}</p>
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">🎯 Meta de Leitura Anual</label>
+              <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Meta de Leitura Anual
+              </label>
               <p className="text-lg mt-1">{user.yearlyReadingGoal ? `${user.yearlyReadingGoal} livros` : '—'}</p>
             </div>
           </div>
@@ -241,7 +292,10 @@ export function ProfilePage() {
       {isEditing && (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">✏️ Editar Perfil</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <User className="w-6 h-6" />
+              Editar Perfil
+            </h2>
             <button
               type="button"
               onClick={() => {
@@ -263,7 +317,10 @@ export function ProfilePage() {
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">👤 Informações Básicas</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Informações Básicas
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -291,15 +348,16 @@ export function ProfilePage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  🔒 Nova Senha (deixe em branco para não alterar)
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Nova Senha (deixe em branco para não alterar)
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  placeholder="Sua nova senha"
                 />
               </div>
             </div>
@@ -307,11 +365,14 @@ export function ProfilePage() {
             <hr className="my-6" />
 
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">📚 Preferências de Leitura</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
+                <Library className="w-5 h-5" />
+                Preferências de Leitura
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    📖 Livro Favorito
+                    Livro Favorito
                   </label>
                   <input
                     type="text"
@@ -323,7 +384,7 @@ export function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    ✍️ Autor Favorito
+                    Autor Favorito
                   </label>
                   <input
                     type="text"
@@ -406,3 +467,6 @@ export function ProfilePage() {
 }
 
 export default ProfilePage;
+
+
+

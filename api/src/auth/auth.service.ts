@@ -78,5 +78,11 @@ export class AuthService {
   async validateUser(id: number) {
     return this.usersService.findById(id);
   }
+
+  async getUserById(id: number) {
+    const user = await this.usersService.findById(id);
+    const { password, ...result } = user;
+    return result;
+  }
 }
 

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Check } from "lucide-react";
+import { Plus, Trash2, Check, ArrowUpFromLine, ArrowDownToLine, BookOpen, User, CheckCircle } from "lucide-react";
 import { api } from "../services/api";
 import toast from "react-hot-toast";
+import { ConfirmModal } from "../components/ConfirmModal";
+import { SkeletonTable } from "../components/SkeletonLoader";
 
 interface Book {
   id: number;
@@ -25,17 +27,26 @@ interface Loan {
   returnDate?: string;
   isReturned: boolean;
   borrowedFrom?: User;
+  lentBy?: User;
   book?: Book;
 }
 
 export default function LoansPage() {
+  const [activeTab, setActiveTab] = useState<'lent' | 'borrowed'>('lent');
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [borrowedLoans, setBorrowedLoans] = useState<Loan[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: "", message: "", onConfirm: () => {} });
 
   useEffect(() => {
     fetchData();
@@ -44,9 +55,13 @@ export default function LoansPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Buscar empréstimos (backend já filtra por usuário)
+      // Buscar empréstimos que EU FIZ (meus livros emprestados para outros)
       const loansRes = await api.get("/loans");
       setLoans(loansRes.data.data || loansRes.data || []);
+
+      // Buscar empréstimos que EU PEGUEI (livros que peguei de outros)
+      const borrowedRes = await api.get("/loans/borrowed/me");
+      setBorrowedLoans(borrowedRes.data.data || borrowedRes.data || []);
 
       // Buscar livros
       const booksRes = await api.get("/books");
@@ -113,40 +128,87 @@ export default function LoansPage() {
   const handleDelete = async (id: number) => {
     const loan = loans.find(l => l.id === id);
     const book = books.find(b => b.id === loan?.book_id);
-    if (window.confirm(`Tem certeza que deseja deletar o empréstimo de "${book?.title}"?`)) {
-      try {
-        await api.delete(`/loans/${id}`);
-        toast.success(`Empréstimo deletado com sucesso!`);
-        fetchData();
-      } catch (err: any) {
-        toast.error(`Erro ao deletar empréstimo: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
-        console.error(err);
-      }
-    }
+    
+    setConfirmModal({
+      isOpen: true,
+      title: "Deletar Empréstimo",
+      message: `Tem certeza que deseja deletar o empréstimo de "${book?.title}"? Esta ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/loans/${id}`);
+          toast.success(`Empréstimo deletado com sucesso!`);
+          setConfirmModal({ ...confirmModal, isOpen: false });
+          fetchData();
+        } catch (err: any) {
+          toast.error(`Erro ao deletar empréstimo: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
+          console.error(err);
+        }
+      },
+    });
   };
+
+  const currentLoans = activeTab === 'lent' ? loans : borrowedLoans;
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <h1 className="text-4xl font-bold">📕 Meus Empréstimos</h1>
+          <h1 className="text-4xl font-bold flex items-center gap-3">
+            <BookOpen className="w-10 h-10 text-red-600" />
+            Empréstimos
+          </h1>
+          {activeTab === 'lent' && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+            >
+              <Plus size={20} /> Novo Empréstimo
+            </button>
+          )}
+        </div>
+        
+        {/* Abas */}
+        <div className="flex gap-4 mb-4 border-b border-gray-200">
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+            onClick={() => setActiveTab('lent')}
+            className={`pb-2 px-4 font-semibold transition flex items-center gap-2 ${
+              activeTab === 'lent'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
           >
-            <Plus size={20} /> Novo Empréstimo
+            <ArrowUpFromLine className="w-4 h-4" />
+            Empréstimos ({loans.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('borrowed')}
+            className={`pb-2 px-4 font-semibold transition flex items-center gap-2 ${
+              activeTab === 'borrowed'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+          >
+            <ArrowDownToLine className="w-4 h-4" />
+            Mutuários ({borrowedLoans.length})
           </button>
         </div>
-        <p className="text-gray-600">Livros que você emprestou para outras pessoas</p>
+        
+        <p className="text-gray-600">
+          {activeTab === 'lent' 
+            ? 'Livros que você emprestou para outras pessoas' 
+            : 'Livros que você pegou emprestado de outras pessoas'}
+        </p>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <p>Carregando empréstimos...</p>
-        </div>
-      ) : loans.length === 0 ? (
+        <SkeletonTable />
+      ) : currentLoans.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 text-lg">Nenhum empréstimo registrado</p>
+          <p className="text-gray-600 text-lg">
+            {activeTab === 'lent' 
+              ? 'Nenhum empréstimo registrado' 
+              : 'Você não tem livros emprestados'}
+          </p>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -155,7 +217,9 @@ export default function LoansPage() {
               <tr className="bg-gray-100 border-b">
                 <th className="px-6 py-3 text-left text-sm font-semibold">ID Livro</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Título</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Emprestado Para (ID)</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  {activeTab === 'lent' ? 'Emprestado Para' : 'Dono do Livro'}
+                </th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Data Empréstimo</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Data Devolução</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
@@ -163,9 +227,13 @@ export default function LoansPage() {
               </tr>
             </thead>
             <tbody>
-              {loans.map((loan) => {
-                const book = books.find(b => b.id === loan.book_id);
-                const borrower = users.find(u => u.id === loan.borrowed_from_id);
+              {currentLoans.map((loan) => {
+                // Usar dados que vêm do backend (loan.book) ou buscar no array local
+                const book = loan.book || books.find(b => b.id === loan.book_id);
+                const otherUser = activeTab === 'lent'
+                  ? (loan.borrowedFrom || users.find(u => u.id === loan.borrowed_from_id))
+                  : (loan.lentBy || users.find(u => u.id === loan.lent_by_id));
+                
                 return (
                   <tr key={loan.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 font-bold text-gray-700 font-mono">{loan.book_id}</td>
@@ -177,8 +245,10 @@ export default function LoansPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium">{borrower?.name || 'Usuário desconhecido'}</p>
-                        <p className="text-xs text-gray-500 font-mono">ID: {loan.borrowed_from_id}</p>
+                        <p className="font-medium">{otherUser?.name || 'Usuário desconhecido'}</p>
+                        <p className="text-xs text-gray-500 font-mono">
+                          ID: {activeTab === 'lent' ? loan.borrowed_from_id : loan.lent_by_id}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -192,17 +262,22 @@ export default function LoansPage() {
                     </td>
                     <td className="px-6 py-4">
                       {loan.isReturned ? (
-                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                          ✅ Devolvido
+                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 flex items-center gap-1 w-fit">
+                          <CheckCircle className="w-4 h-4" />
+                          Devolvido
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                          📤 Emprestado
+                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800 flex items-center gap-1 w-fit">
+                          {activeTab === 'lent' ? (
+                            <><ArrowUpFromLine className="w-4 h-4" /> Emprestado</>
+                          ) : (
+                            <><ArrowDownToLine className="w-4 h-4" /> Com você</>
+                          )}
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-4 flex gap-2">
-                      {!loan.isReturned && (
+                      {!loan.isReturned && activeTab === 'lent' && (
                         <button
                           onClick={() => handleReturn(loan.id)}
                           className="text-green-600 hover:text-green-800 transition"
@@ -211,13 +286,15 @@ export default function LoansPage() {
                           <Check size={18} />
                         </button>
                       )}
-                      <button
-                        onClick={() => handleDelete(loan.id)}
-                        className="text-red-600 hover:text-red-800 transition"
-                        title="Deletar"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {activeTab === 'lent' && (
+                        <button
+                          onClick={() => handleDelete(loan.id)}
+                          className="text-red-600 hover:text-red-800 transition"
+                          title="Deletar"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -231,10 +308,16 @@ export default function LoansPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
-            <h2 className="text-2xl font-bold mb-4">📕 Novo Empréstimo</h2>
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <BookOpen className="w-6 h-6 text-blue-600" />
+              Novo Empréstimo
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">📚 Selecione o Livro</label>
+                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Selecione o Livro
+                </label>
                 <select
                   value={selectedBookId}
                   onChange={(e) => setSelectedBookId(e.target.value)}
@@ -248,13 +331,13 @@ export default function LoansPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Mostrando todos os seus livros disponíveis
-                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">👤 Emprestado Para</label>
+                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Emprestado Para
+                </label>
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
@@ -268,17 +351,15 @@ export default function LoansPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Selecione quem vai pegar o livro emprestado
-                </p>
               </div>
 
               <div className="flex gap-2 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
                 >
-                  ✅ Registrar Empréstimo
+                  <Check className="w-5 h-5" />
+                  Registrar Empréstimo
                 </button>
                 <button
                   type="button"
@@ -296,6 +377,21 @@ export default function LoansPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Confirmação */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Sim, deletar"
+        cancelText="Cancelar"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        type="danger"
+      />
     </div>
   );
 }
+
+
+

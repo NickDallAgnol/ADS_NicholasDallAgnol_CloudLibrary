@@ -31,6 +31,11 @@ export class LoansController {
     return this.loansService.findAll(req.user.id, query);
   }
 
+  @Get('borrowed/me')
+  findBorrowed(@Request() req: any, @Query() query: any) {
+    return this.loansService.findBorrowed(req.user.id, query);
+  }
+
   @Get(':id')
   findOne(
     @Request() req: any,

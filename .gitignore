@@ -37,3 +37,19 @@ node_modules/
 # Relatórios de teste
 coverage
 .nyc_output
+
+# Arquivos de teste e scripts temporários
+test-*.js
+create-demo-users.js
+*-demo-*.js
+
+# Documentação temporária
+DARK_MODE_SETUP.md
+
+# Scripts SQL de desenvolvimento
+api/check-users.sql
+api/reset-database.sql
+
+# Arquivos de backup
+*-backup.*
+*.backup.*

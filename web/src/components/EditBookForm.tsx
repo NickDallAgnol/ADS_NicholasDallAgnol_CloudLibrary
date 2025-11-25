@@ -99,3 +99,4 @@ export function EditBookForm({ book, onSuccess, onCancel }: {
     </form>
   );
 }
+

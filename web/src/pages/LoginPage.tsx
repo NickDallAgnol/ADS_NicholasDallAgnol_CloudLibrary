@@ -1,7 +1,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { api } from '../services/api';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Mail, Lock, Key } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
@@ -85,12 +85,13 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              📧 E-mail
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              E-mail
             </label>
             <input
               type="email"
-              placeholder="seu@email.com"
+              placeholder="exemplo@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input"
@@ -98,13 +99,14 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              🔒 Senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Senha
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="Sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input pr-10"
@@ -138,9 +140,10 @@ export function LoginPage() {
         <div className="mt-6 text-center">
           <Link 
             to="/forgot-password" 
-            className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+            className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors flex items-center justify-center gap-2"
           >
-            🔑 Esqueceu sua senha?
+            <Key className="w-4 h-4" />
+            Esqueceu sua senha?
           </Link>
         </div>
 
@@ -158,3 +161,4 @@ export function LoginPage() {
 }
 
 export default LoginPage;
+

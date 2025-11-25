@@ -9,7 +9,7 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="bg-white border-b-2 border-gray-100 shadow-sm sticky top-0 z-50">
+    <header className="bg-white border-b-2 border-gray-100 shadow-sm sticky top-0 z-50 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link 
@@ -109,4 +109,5 @@ export function Header() {
     </header>
   );
 }
+
 

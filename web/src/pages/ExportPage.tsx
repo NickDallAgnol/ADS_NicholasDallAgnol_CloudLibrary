@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Upload, CheckCircle } from "lucide-react";
 import { api } from "../services/api";
+import toast from "react-hot-toast";
 
 export default function ExportPage() {
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
@@ -21,9 +22,9 @@ export default function ExportPage() {
       link.click();
       link.parentNode?.removeChild(link);
       
-      alert("PDF exportado com sucesso!");
+      toast.success("PDF exportado com sucesso!");
     } catch (err: any) {
-      alert("Erro ao exportar PDF");
+      toast.error("Erro ao exportar PDF. Tente novamente.");
       console.error(err);
     } finally {
       setIsLoadingPdf(false);
@@ -45,9 +46,9 @@ export default function ExportPage() {
       link.click();
       link.parentNode?.removeChild(link);
       
-      alert("CSV exportado com sucesso!");
+      toast.success("CSV exportado com sucesso!");
     } catch (err: any) {
-      alert("Erro ao exportar CSV");
+      toast.error("Erro ao exportar CSV. Tente novamente.");
       console.error(err);
     } finally {
       setIsLoadingCsv(false);
@@ -56,7 +57,10 @@ export default function ExportPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">📤 Exportação de Dados</h1>
+      <h1 className="text-4xl font-bold mb-8 flex items-center gap-3">
+        <Upload className="w-10 h-10 text-blue-600" />
+        Exportação de Dados
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Exportar PDF */}
@@ -78,10 +82,10 @@ export default function ExportPage() {
           <div className="bg-gray-50 rounded p-4 mb-6">
             <h3 className="font-semibold mb-2">O que será incluído:</h3>
             <ul className="text-sm text-gray-700 space-y-1">
-              <li>✓ Lista completa de livros</li>
-              <li>✓ Status de cada livro</li>
-              <li>✓ Progresso de leitura</li>
-              <li>✓ Estatísticas gerais</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Lista completa de livros</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Status de cada livro</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Progresso de leitura</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Estatísticas gerais</li>
               <li>✓ Data da exportação</li>
             </ul>
           </div>
@@ -115,11 +119,11 @@ export default function ExportPage() {
           <div className="bg-gray-50 rounded p-4 mb-6">
             <h3 className="font-semibold mb-2">O que será incluído:</h3>
             <ul className="text-sm text-gray-700 space-y-1">
-              <li>✓ Título do livro</li>
-              <li>✓ Autor</li>
-              <li>✓ Editora</li>
-              <li>✓ Gênero</li>
-              <li>✓ Status e progresso</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Título do livro</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Autor</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Editora</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Gênero</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> Status e progresso</li>
             </ul>
           </div>
 
@@ -135,7 +139,7 @@ export default function ExportPage() {
       </div>
 
       {/* Informações adicionais */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-8">
+      <div className="bg-blue-50 border border-b rounded-lg p-6 mt-8">
         <h3 className="font-bold text-blue-900 mb-2">💡 Dicas úteis:</h3>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Use PDF para compartilhar com outros usuários ou imprimir</li>
@@ -147,3 +151,6 @@ export default function ExportPage() {
     </div>
   );
 }
+
+
+

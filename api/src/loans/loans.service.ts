@@ -65,6 +65,41 @@ export class LoansService {
     };
   }
 
+  // Novo método para buscar livros que o usuário PEGOU emprestado (mutuários)
+  async findBorrowed(userId: number, query: any = {}): Promise<{
+    data: Loan[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const { page = 1, limit = 10, returnedOnly = false } = query;
+
+    // Mostrar apenas empréstimos onde o usuário é o MUTUÁRIO (borrowed_from)
+    // Ou seja, livros que ELE pegou emprestado de outros
+    const qb = this.loansRepository
+      .createQueryBuilder('loan')
+      .leftJoinAndSelect('loan.lentBy', 'lentBy')
+      .leftJoinAndSelect('loan.borrowedFrom', 'borrowedFrom')
+      .leftJoinAndSelect('loan.book', 'book')
+      .where('loan.borrowed_from_id = :userId', { userId });
+
+    if (returnedOnly) {
+      qb.andWhere('loan.is_returned = true');
+    }
+
+    qb.orderBy('loan.id', 'DESC');
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   async findOne(userId: number, id: number): Promise<Loan> {
     const loan = await this.loansRepository.findOne({
       where: { id },

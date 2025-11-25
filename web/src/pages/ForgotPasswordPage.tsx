@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { api } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
-import { KeyRound, ArrowLeft } from 'lucide-react';
+import { KeyRound, ArrowLeft, Mail, Lock, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function ForgotPasswordPage() {
@@ -57,19 +57,19 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-purple p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-800 p-4 relative overflow-hidden">
       {/* Decorações de fundo */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
       </div>
 
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-10 animate-slide-in">
         <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="p-4 bg-gradient-to-br from-purple-600 to-pink-700 rounded-2xl shadow-lg">
+          <div className="p-4 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl shadow-lg">
             <KeyRound className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-700 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent">
             Recuperar Senha
           </h1>
           <p className="text-gray-500 text-sm font-medium text-center">
@@ -79,12 +79,13 @@ export function ForgotPasswordPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              📧 E-mail cadastrado
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              E-mail cadastrado
             </label>
             <input
               type="email"
-              placeholder="seu@email.com"
+              placeholder="exemplo@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input"
@@ -92,12 +93,13 @@ export function ForgotPasswordPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              🔑 Nova senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Nova senha
             </label>
             <input
               type="password"
-              placeholder="••••••••"
+              placeholder="Sua nova senha"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="input"
@@ -105,12 +107,13 @@ export function ForgotPasswordPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ✅ Confirmar nova senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Confirmar nova senha
             </label>
             <input
               type="password"
-              placeholder="••••••••"
+              placeholder="Confirme sua senha"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="input"
@@ -148,3 +151,4 @@ export function ForgotPasswordPage() {
 }
 
 export default ForgotPasswordPage;
+

@@ -1,7 +1,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { api } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 
@@ -116,8 +116,9 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              👤 Nome Completo
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Nome Completo
             </label>
             <input
               type="text"
@@ -129,8 +130,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              📧 E-mail
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              E-mail
             </label>
             <input
               type="email"
@@ -143,13 +145,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              🔒 Senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Senha
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="Sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input pr-10"
@@ -167,13 +170,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              🔒 Confirmar Senha
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Confirmar Senha
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="Confirme sua senha"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input pr-10"
@@ -216,4 +220,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
 

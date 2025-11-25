@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBooks, useCreateBook, useUpdateBook, useDeleteBook, type Book } from "../hooks/useBooks";
-import { Plus, Edit2, Trash2, X } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Search, Library, BookOpen } from "lucide-react";
 import toast from "react-hot-toast";
+import { ConfirmModal } from "../components/ConfirmModal";
+import { SkeletonTable } from "../components/SkeletonLoader";
+import { useDebounce } from "../hooks/useDebounce";
 
 export default function BooksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 500);
   const [filters, setFilters] = useState({
     q: "",
     status: "",
@@ -21,6 +26,12 @@ export default function BooksPage() {
     status: "TO_READ",
     progress: 0,
   });
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: "", message: "", onConfirm: () => {} });
 
   // Hooks
   const { data, isLoading, error, refresh } = useBooks({
@@ -32,6 +43,11 @@ export default function BooksPage() {
   const createBook = useCreateBook();
   const updateBook = useUpdateBook();
   const deleteBook = useDeleteBook();
+
+  // Atualizar filtros com debounce
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, q: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   // Funções auxiliares
   const openModal = (book?: Book) => {
@@ -92,15 +108,22 @@ export default function BooksPage() {
 
   const handleDelete = async (id: number) => {
     const bookTitle = books.find(b => b.id === id)?.title || "Livro";
-    if (window.confirm(`Tem certeza que deseja deletar "${bookTitle}"?`)) {
-      try {
-        await deleteBook.mutateAsync(id);
-        toast.success(`Livro "${bookTitle}" deletado com sucesso!`);
-        refresh();
-      } catch (err: any) {
-        toast.error(`Erro ao deletar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
-      }
-    }
+    
+    setConfirmModal({
+      isOpen: true,
+      title: "Deletar Livro",
+      message: `Tem certeza que deseja deletar "${bookTitle}"? Esta ação não pode ser desfeita e removerá o livro permanentemente da sua biblioteca.`,
+      onConfirm: async () => {
+        try {
+          await deleteBook.mutateAsync(id);
+          toast.success(`Livro "${bookTitle}" deletado com sucesso!`);
+          setConfirmModal({ ...confirmModal, isOpen: false });
+          refresh();
+        } catch (err: any) {
+          toast.error(`Erro ao deletar livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
+        }
+      },
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -127,7 +150,10 @@ export default function BooksPage() {
     <div className="max-w-7xl mx-auto">
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-4xl font-bold">📚 Minha Biblioteca</h1>
+        <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+          <Library className="w-10 h-10 text-blue-600" />
+          Minha Biblioteca
+        </h1>
         <button
           onClick={() => openModal()}
           className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
@@ -139,17 +165,28 @@ export default function BooksPage() {
       {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="Buscar por título ou autor..."
-            value={filters.q}
-            onChange={(e) => setFilters({ ...filters, q: e.target.value, page: 1 })}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-          />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar por título ou autor..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:text-gray-400"
+            />
+            {searchInput && (
+              <button
+                onClick={() => setSearchInput("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           >
             <option value="">Todos os Status</option>
             <option value="TO_READ">A Ler</option>
@@ -159,7 +196,7 @@ export default function BooksPage() {
           <select
             value={filters.limit}
             onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value), page: 1 })}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           >
             <option value={10}>10 itens</option>
             <option value={20}>20 itens</option>
@@ -169,12 +206,7 @@ export default function BooksPage() {
       </div>
 
       {/* Estado de carregamento */}
-      {isLoading && (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin">⏳</div>
-          <p className="text-gray-600 mt-2">Carregando livros...</p>
-        </div>
-      )}
+      {isLoading && <SkeletonTable />}
 
       {/* Erro */}
       {error && (
@@ -277,7 +309,7 @@ export default function BooksPage() {
       {/* Sem livros */}
       {!isLoading && books.length === 0 && (
         <div className="text-center py-12 bg-white rounded-lg shadow">
-          <div className="text-6xl mb-4">📖</div>
+          <BookOpen className="w-24 h-24 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-600 text-lg">Nenhum livro encontrado</p>
           <button
             onClick={() => openModal()}
@@ -293,7 +325,7 @@ export default function BooksPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl font-bold text-gray-900">
                 {editingBook ? "Editar Livro" : "Novo Livro"}
               </h2>
               <button
@@ -310,7 +342,7 @@ export default function BooksPage() {
                 placeholder="Título *"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400"
                 required
               />
               <input
@@ -318,7 +350,7 @@ export default function BooksPage() {
                 placeholder="Autor *"
                 value={formData.author}
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400"
                 required
               />
               <input
@@ -326,19 +358,19 @@ export default function BooksPage() {
                 placeholder="Editora"
                 value={formData.publisher}
                 onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400"
               />
               <input
                 type="text"
                 placeholder="Gênero"
                 value={formData.genre}
                 onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400"
               />
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 <option value="TO_READ">A Ler</option>
                 <option value="READING">Lendo</option>
@@ -378,6 +410,19 @@ export default function BooksPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Confirmação */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Sim, deletar"
+        cancelText="Cancelar"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        type="danger"
+      />
     </div>
   );
 }
+

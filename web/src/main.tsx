@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import App from "./App";
 import "./index.css";
 
@@ -13,9 +14,11 @@ if (!rootElement) {
   try {
     ReactDOM.createRoot(rootElement).render(
       <React.StrictMode>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <ThemeProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ThemeProvider>
       </React.StrictMode>
     );
   } catch (error) {
@@ -23,3 +26,4 @@ if (!rootElement) {
     rootElement.innerHTML = '<div style="padding: 20px; font-family: sans-serif; background: red; color: white;"><h1>❌ Erro ao carregar aplicação</h1><pre>' + String(error) + '</pre></div>';
   }
 }
+

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
+import { SkeletonStats, SkeletonCard } from '../components/SkeletonLoader';
 import { Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -8,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { BookOpen, TrendingUp, CheckCircle, Clock, Upload } from 'lucide-react';
+import { BookOpen, TrendingUp, CheckCircle, Clock, Upload, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -97,14 +98,15 @@ export function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2">📊 Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-300">Bem-vindo! A Cloud Library está aqui para ajudar você a gerenciar seus livros de forma eficiente.</p>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+          <BarChart3 className="w-10 h-10 text-blue-600" />
+          Dashboard
+        </h1>
+        <p className="text-gray-600">Bem-vindo! A Cloud Library está aqui para ajudar você a gerenciar seus livros de forma eficiente.</p>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <SkeletonStats />
       ) : (
         <>
           {/* Cards de Estatísticas */}
@@ -171,7 +173,7 @@ export function DashboardPage() {
             {/* Gráfico */}
             <div className="card">
               <div className="card-header">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Distribuição de Leitura</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Distribuição de Leitura</h2>
               </div>
               <div className="card-body">
                 {chartData && stats && stats.total > 0 ? (
@@ -179,8 +181,8 @@ export function DashboardPage() {
                     <Pie data={chartData} options={{ maintainAspectRatio: true }} />
                   </div>
                 ) : (
-                  <div className="h-64 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                    <BookOpen size={48} className="mb-4 text-gray-300 dark:text-gray-600" />
+                  <div className="h-64 flex flex-col items-center justify-center text-gray-500">
+                    <BookOpen size={48} className="mb-4 text-gray-300" />
                     <p>Nenhum livro cadastrado ainda</p>
                     <Link to="/books" className="btn-primary mt-4">
                       Adicionar primeiro livro
@@ -193,70 +195,70 @@ export function DashboardPage() {
             {/* Status de Disponibilidade */}
             <div className="card">
               <div className="card-header">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Status dos Livros</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Status dos Livros</h2>
               </div>
               <div className="card-body space-y-4">
                 {/* Livros Disponíveis */}
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
+                <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
                         <CheckCircle size={24} className="text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-green-800 dark:text-green-300">Livros Disponíveis</h3>
-                        <p className="text-sm text-green-600 dark:text-green-400">Prontos para leitura ou empréstimo</p>
+                        <h3 className="font-bold text-lg text-green-800">Livros Disponíveis</h3>
+                        <p className="text-sm text-green-600">Prontos para leitura ou empréstimo</p>
                       </div>
                     </div>
-                    <span className="text-3xl font-bold text-green-700 dark:text-green-400">
+                    <span className="text-3xl font-bold text-green-700">
                       {books.filter(b => b.availableForLoan).length}
                     </span>
                   </div>
                   <Link 
                     to="/books" 
-                    className="text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 text-sm font-semibold flex items-center gap-1"
+                    className="text-green-700 hover:text-green-900 text-sm font-semibold flex items-center gap-1"
                   >
                     Ver todos os livros →
                   </Link>
                 </div>
 
                 {/* Livros Emprestados */}
-                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-2 border-orange-200 dark:border-orange-800">
+                <div className="p-4 bg-orange-50 rounded-lg border-2 border-orange-200">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
                         <Upload size={24} className="text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-orange-800 dark:text-orange-300">Livros Emprestados</h3>
-                        <p className="text-sm text-orange-600 dark:text-orange-400">Que você emprestou para outros</p>
+                        <h3 className="font-bold text-lg text-orange-800">Livros Emprestados</h3>
+                        <p className="text-sm text-orange-600">Que você emprestou para outros</p>
                       </div>
                     </div>
-                    <span className="text-3xl font-bold text-orange-700 dark:text-orange-400">
+                    <span className="text-3xl font-bold text-orange-700">
                       {loanStats.emprestados}
                     </span>
                   </div>
                   <Link 
                     to="/loans" 
-                    className="text-orange-700 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 text-sm font-semibold flex items-center gap-1"
+                    className="text-orange-700 hover:text-orange-900 text-sm font-semibold flex items-center gap-1"
                   >
                     Gerenciar empréstimos →
                   </Link>
                 </div>
 
                 {/* Total de Livros Indisponíveis */}
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-800">
+                <div className="p-4 bg-red-50 rounded-lg border-2 border-red-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
                         <BookOpen size={24} className="text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-red-800 dark:text-red-300">Indisponíveis</h3>
-                        <p className="text-sm text-red-600 dark:text-red-400">Livros não disponíveis no momento</p>
+                        <h3 className="font-bold text-lg text-red-800">Indisponíveis</h3>
+                        <p className="text-sm text-red-600">Livros não disponíveis no momento</p>
                       </div>
                     </div>
-                    <span className="text-3xl font-bold text-red-700 dark:text-red-400">
+                    <span className="text-3xl font-bold text-red-700">
                       {books.filter(b => !b.availableForLoan).length}
                     </span>
                   </div>
@@ -271,3 +273,4 @@ export function DashboardPage() {
 }
 
 export default DashboardPage;
+
