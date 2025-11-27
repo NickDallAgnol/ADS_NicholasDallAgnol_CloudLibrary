@@ -6,6 +6,10 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { SkeletonTable } from "../components/SkeletonLoader";
 import { useDebounce } from "../hooks/useDebounce";
 
+/**
+ * Página de gerenciamento de livros
+ * Permite CRUD completo com busca, filtros e paginação
+ */
 export default function BooksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);

@@ -9,11 +9,16 @@ interface User {
   email: string;
 }
 
+/**
+ * Hook de autenticação
+ * Gerencia estado do usuário logado e sincroniza entre abas
+ */
 export function useAuth() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Carrega os dados do usuário autenticado
   const loadUser = async () => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -35,10 +40,13 @@ export function useAuth() {
   useEffect(() => {
     loadUser();
 
-    // Listener para detectar mudanças no localStorage de outras abas
+    /**
+     * Sincroniza autenticação entre múltiplas abas
+     * Detecta login/logout em outras abas do navegador
+     */
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
-        // Token foi alterado em outra aba
+        // Sincroniza o estado com a outra aba
         if (e.newValue) {
           // Novo login em outra aba - recarregar usuário
           loadUser();

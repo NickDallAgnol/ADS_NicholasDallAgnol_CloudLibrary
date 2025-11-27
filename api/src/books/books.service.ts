@@ -13,9 +13,13 @@ export class BooksService {
     private readonly booksRepository: Repository<Book>,
   ) {}
 
+  /**
+   * Cria um novo livro vinculado ao usuário
+   * Utiliza query direta para garantir a correta associação do user_id
+   */
   async create(userId: number, dto: CreateBookDto): Promise<Book> {
     try {
-      // Criar entidade livro sem relações inicialmente
+      // Prepara os dados do livro
       const bookData: Partial<Book> = {
         title: dto.title,
         author: dto.author,
@@ -41,18 +45,21 @@ export class BooksService {
       });
       return result as Book;
     } catch (error) {
-      console.error('Error creating book:', error);
       throw error;
     }
   }
 
+  /**
+   * Lista os livros do usuário com paginação e filtros
+   * Suporta busca por título/autor e filtro por status
+   */
   async findAll(userId: number, query: QueryBooksDto): Promise<{
     data: Book[];
     total: number;
     page: number;
     totalPages: number;
   }> {
-    // Extrair e validar params
+    // Normaliza e valida os parâmetros de busca
     let { q, status, page, limit } = query;
     
     // Converter strings vazias em undefined/null
@@ -67,8 +74,7 @@ export class BooksService {
     page = page ? Number(page) : 1;
     limit = limit ? Number(limit) : 10;
 
-    console.log(`📖 Buscando livros do usuário ${userId}:`, { q, status: statusEnum, page, limit });
-
+    // Constrói a query com joins e filtros dinâmicos
     let query_builder = this.booksRepository.createQueryBuilder('book')
       .leftJoinAndSelect('book.user', 'user')
       .where('book.user_id = :userId', { userId });
@@ -88,8 +94,6 @@ export class BooksService {
     query_builder = query_builder.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await query_builder.getManyAndCount();
-
-    console.log(`✅ Encontrados ${total} livros (mostrando ${data.length})`);
 
     return {
       data,
@@ -130,6 +134,10 @@ export class BooksService {
     return this.booksRepository.remove(book);
   }
 
+  /**
+   * Calcula estatísticas de leitura do usuário
+   * Retorna contadores por status de leitura
+   */
   async getStats(userId: number): Promise<{
     total: number;
     toRead: number;

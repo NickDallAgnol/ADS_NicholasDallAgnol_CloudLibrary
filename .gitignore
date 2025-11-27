@@ -42,6 +42,8 @@ coverage
 test-*.js
 create-demo-users.js
 *-demo-*.js
+*.spec.ts
+test/
 
 # Documentação temporária
 DARK_MODE_SETUP.md

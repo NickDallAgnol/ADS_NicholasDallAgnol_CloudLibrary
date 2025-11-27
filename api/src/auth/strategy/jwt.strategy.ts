@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+/**
+ * Estratégia de validação JWT
+ * Extrai e valida tokens do header Authorization
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -12,8 +16,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // Extrai os dados do usuário do payload do token
   async validate(payload: any) {
-    console.log('>>> JWT payload recebido:', payload); // 👀 debug
     return { id: payload.sub, email: payload.email };
   }
 }

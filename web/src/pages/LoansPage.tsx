@@ -72,7 +72,7 @@ export default function LoansPage() {
       setUsers(usersRes.data || []);
     } catch (err: any) {
       toast.error("Erro ao carregar dados");
-      console.error(err);
+
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +105,7 @@ export default function LoansPage() {
       fetchData();
     } catch (err: any) {
       toast.error(`Erro ao criar empréstimo: ${err.response?.data?.message || err.message || 'Verifique os dados'}`);
-      console.error(err);
+
     }
   };
 
@@ -121,7 +121,7 @@ export default function LoansPage() {
       fetchData();
     } catch (err: any) {
       toast.error(`Erro ao devolver livro: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
-      console.error(err);
+
     }
   };
 
@@ -141,7 +141,7 @@ export default function LoansPage() {
           fetchData();
         } catch (err: any) {
           toast.error(`Erro ao deletar empréstimo: ${err.response?.data?.message || err.message || 'Tente novamente'}`);
-          console.error(err);
+
         }
       },
     });

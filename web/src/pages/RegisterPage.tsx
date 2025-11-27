@@ -80,7 +80,7 @@ export default function RegisterPage() {
       toast.success("Usuário registrado com sucesso! Faça login.");
       navigate("/login");
     } catch (err: any) {
-      console.error(err);
+
       if (err.response?.data?.message) {
         // Se for array de mensagens, exibe todas
         const message = Array.isArray(err.response.data.message) 

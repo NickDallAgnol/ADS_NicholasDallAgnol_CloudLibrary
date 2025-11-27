@@ -37,7 +37,6 @@ export function EditBookForm({ book, onSuccess, onCancel }: {
       toast.success('Livro atualizado com sucesso!');
       if (onSuccess) onSuccess();
     } catch (err) {
-      console.error(err);
       toast.error('Erro ao atualizar livro');
     } finally {
       setLoading(false);

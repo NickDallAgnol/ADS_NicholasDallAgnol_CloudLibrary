@@ -10,6 +10,10 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Book } from '../../books/entities/book.entity';
 
+/**
+ * Entidade de empréstimos
+ * Registra empréstimos de livros entre usuários
+ */
 @Entity('loans')
 export class Loan {
   @PrimaryGeneratedColumn()

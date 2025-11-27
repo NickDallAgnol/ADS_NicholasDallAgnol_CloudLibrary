@@ -4,19 +4,25 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+/**
+ * Função principal de inicialização da API
+ * Configura CORS, validações, Swagger e inicia o servidor
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3000;
 
+  // Habilita CORS para permitir requisições do frontend
   app.enableCors();
 
+  // Configura validação automática dos DTOs
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Remove propriedades não esperadas
-      forbidNonWhitelisted: true, // Gera erro se vier algo fora do DTO
-      transform: true, // Converte tipos automaticamente (ex: string → number)
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 

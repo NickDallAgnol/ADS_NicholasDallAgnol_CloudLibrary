@@ -12,9 +12,14 @@ import LoansPage from "./pages/LoansPage";
 import ExportPage from "./pages/ExportPage";
 import "./App.css";
 
+/**
+ * Componente raiz da aplicação
+ * Define as rotas e configurações globais de notificação
+ */
 export default function App() {
   return (
     <>
+      {/* Sistema de notificações toast */}
       <Toaster 
         position="top-right"
         toastOptions={{

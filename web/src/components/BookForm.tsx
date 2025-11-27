@@ -36,7 +36,6 @@ export function BookForm({ onSuccess }: { onSuccess?: () => void }) {
       setStatus('TO_READ');
       if (onSuccess) onSuccess();
     } catch (err) {
-      console.error(err);
       toast.error('Erro ao adicionar livro');
     } finally {
       setLoading(false);

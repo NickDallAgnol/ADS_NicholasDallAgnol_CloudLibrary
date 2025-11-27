@@ -2,6 +2,10 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 
+/**
+ * Componente de proteção de rotas
+ * Valida autenticação antes de renderizar conteúdo privado
+ */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,14 +26,13 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       }
 
       try {
-        // Validar token com o backend
+        // Valida o token consultando a API
         const response = await api.get('/auth/me');
         if (isMounted && response.data) {
           setIsAuthenticated(true);
         }
       } catch (error) {
-        // Token inválido ou expirado
-        console.error('Erro ao validar token:', error);
+        // Token inválido ou expirado - remove e redireciona
         localStorage.removeItem('token');
         if (isMounted) {
           setIsAuthenticated(false);

@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../services/api';
 
+/**
+ * Hooks customizados para gerenciar operações de livros
+ * Implementa listagem, CRUD e busca com paginação
+ */
+
 export interface Book {
   id: number;
   title: string;
@@ -26,13 +31,17 @@ export interface PaginatedBooks {
   totalPages: number;
 }
 
-// Lista de livros (com paginação e filtros)
+/**
+ * Lista livros com paginação e filtros
+ * Suporta busca por título/autor e filtro por status de leitura
+ */
 export function useBooks(query?: Partial<QueryBooksDto>) {
   const [data, setData] = useState<PaginatedBooks | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Força uma nova busca dos dados
   const refresh = useCallback(() => {
     setRefreshKey(k => k + 1);
   }, []);
@@ -41,17 +50,15 @@ export function useBooks(query?: Partial<QueryBooksDto>) {
     const fetchBooks = async () => {
       setIsLoading(true);
       try {
-        // Limpar parâmetros vazios para evitar problemas no backend
+        // Remove parâmetros vazios antes de enviar para a API
         const cleanQuery = Object.fromEntries(
           Object.entries(query || {}).filter(([_, v]) => v !== '' && v !== undefined && v !== null)
         );
         
-        console.log('📚 Fetching books with query:', cleanQuery);
         const response = await api.get('/books', { params: cleanQuery });
         setData(response.data);
         setError(null);
       } catch (err: any) {
-        console.error('❌ Error fetching books:', err);
         setError(err);
       } finally {
         setIsLoading(false);
@@ -64,7 +71,9 @@ export function useBooks(query?: Partial<QueryBooksDto>) {
   return { data, isLoading, error, refresh };
 }
 
-// Um livro específico
+/**
+ * Busca um livro específico por ID
+ */
 export function useBook(id: number) {
   const [data, setData] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,7 +101,9 @@ export function useBook(id: number) {
   return { data, isLoading, error };
 }
 
-// Criar livro
+/**
+ * Cria um novo livro no acervo
+ */
 export function useCreateBook() {
   const [isPending, setIsPending] = useState(false);
 
@@ -109,7 +120,9 @@ export function useCreateBook() {
   return { mutateAsync, isPending };
 }
 
-// Atualizar livro
+/**
+ * Atualiza os dados de um livro existente
+ */
 export function useUpdateBook() {
   const [isPending, setIsPending] = useState(false);
 
@@ -126,7 +139,9 @@ export function useUpdateBook() {
   return { mutateAsync, isPending };
 }
 
-// Deletar livro
+/**
+ * Remove um livro do acervo
+ */
 export function useDeleteBook() {
   const [isPending, setIsPending] = useState(false);
 

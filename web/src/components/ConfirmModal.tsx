@@ -11,6 +11,10 @@ interface ConfirmModalProps {
   type?: 'danger' | 'warning' | 'info';
 }
 
+/**
+ * Modal de confirmação de ações
+ * Utilizado para ações destrutivas como exclusão
+ */
 export function ConfirmModal({
   isOpen,
   title,

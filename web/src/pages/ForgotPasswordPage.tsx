@@ -48,7 +48,7 @@ export function ForgotPasswordPage() {
         navigate('/login');
       }, 1500);
     } catch (err: any) {
-      console.error(err);
+
       const message = err.response?.data?.message || 'Erro ao resetar senha. Verifique se o e-mail está correto.';
       toast.error(message);
     } finally {

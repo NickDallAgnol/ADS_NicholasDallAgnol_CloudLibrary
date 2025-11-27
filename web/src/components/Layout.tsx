@@ -1,6 +1,10 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "./Header";
 
+/**
+ * Layout principal da aplicação
+ * Contém header, conteúdo e footer
+ */
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 transition-colors duration-200">

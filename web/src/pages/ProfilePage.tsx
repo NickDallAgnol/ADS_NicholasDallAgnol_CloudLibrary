@@ -56,7 +56,7 @@ export function ProfilePage() {
         setYearlyReadingGoal(res.data.yearlyReadingGoal || 0);
         setBio(res.data.bio || '');
       } catch (err) {
-        console.error(err);
+
         toast.error('Erro ao carregar perfil.');
       }
     }
@@ -66,7 +66,7 @@ export function ProfilePage() {
         const res = await api.get<Stats>('/books/stats/overview');
         setStats(res.data);
       } catch (err) {
-        console.error(err);
+
       }
     }
 
@@ -79,7 +79,7 @@ export function ProfilePage() {
           : 0;
         setLoanStats({ lentByMe, borrowedByMe: 0 });
       } catch (err) {
-        console.error('Erro ao buscar estatísticas de empréstimos:', err);
+
         setLoanStats({ lentByMe: 0, borrowedByMe: 0 });
       }
     }
@@ -128,7 +128,7 @@ export function ProfilePage() {
       setPassword('');
       toast.success('Perfil atualizado com sucesso!');
     } catch (err: any) {
-      console.error(err);
+
       const errorMessage = err?.response?.data?.message || 'Erro ao atualizar perfil.';
       toast.error(errorMessage);
     }

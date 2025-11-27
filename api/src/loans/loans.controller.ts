@@ -16,6 +16,10 @@ import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 
+/**
+ * Controller de empréstimos
+ * Gerencia empréstimos de livros entre usuários
+ */
 @Controller('loans')
 @UseGuards(JwtAuthGuard)
 export class LoansController {
@@ -31,6 +35,7 @@ export class LoansController {
     return this.loansService.findAll(req.user.id, query);
   }
 
+  // Lista livros que o usuário pegou emprestado
   @Get('borrowed/me')
   findBorrowed(@Request() req: any, @Query() query: any) {
     return this.loansService.findBorrowed(req.user.id, query);

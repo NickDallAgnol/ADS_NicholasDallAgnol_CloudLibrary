@@ -57,7 +57,7 @@ export function LoginPage() {
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (err) {
-      console.error(err);
+
       toast.error('Credenciais inválidas');
     } finally {
       setLoading(false);

@@ -2,6 +2,10 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { LogOut, User, BookOpen, FileText, Download } from "lucide-react";
 
+/**
+ * Header de navegação principal
+ * Contém logo, menu e ações do usuário
+ */
 export function Header() {
   const { logout, user } = useAuth();
   const location = useLocation();

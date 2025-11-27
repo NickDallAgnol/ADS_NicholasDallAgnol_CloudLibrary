@@ -5,6 +5,10 @@ import { Book } from './entities/book.entity';
 import PDFDocument from 'pdfkit';
 import { Response } from 'express';
 
+/**
+ * Serviço de exportação de livros
+ * Gera relatórios em PDF e CSV do acervo pessoal
+ */
 @Injectable()
 export class BooksExportService {
   constructor(
@@ -12,6 +16,10 @@ export class BooksExportService {
     private readonly booksRepository: Repository<Book>,
   ) {}
 
+  /**
+   * Exporta acervo em formato PDF
+   * Inclui estatísticas e lista completa de livros
+   */
   async exportToPdf(userId: number, res: Response): Promise<void> {
     const books = await this.booksRepository.find({
       where: { user: { id: userId } },

@@ -13,6 +13,10 @@ import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { BookStatus } from '../entities/book.entity';
 
+/**
+ * DTO para criação de livros
+ * Define validações e estrutura dos dados de entrada
+ */
 export class CreateBookDto {
   @ApiProperty({ example: 'Dom Casmurro' })
   @IsString()

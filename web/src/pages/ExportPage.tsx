@@ -25,7 +25,7 @@ export default function ExportPage() {
       toast.success("PDF exportado com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao exportar PDF. Tente novamente.");
-      console.error(err);
+
     } finally {
       setIsLoadingPdf(false);
     }
@@ -49,7 +49,7 @@ export default function ExportPage() {
       toast.success("CSV exportado com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao exportar CSV. Tente novamente.");
-      console.error(err);
+
     } finally {
       setIsLoadingCsv(false);
     }

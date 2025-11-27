@@ -15,13 +15,17 @@ export class LoansService {
     private readonly booksRepository: Repository<Book>,
   ) {}
 
+  /**
+   * Cria um novo empréstimo de livro
+   * Registra o usuário como dono do livro e marca como emprestado
+   */
   async create(userId: number, dto: CreateLoanDto): Promise<Loan> {
     const loan = this.loansRepository.create({
       ...dto,
       lentBy: { id: userId },
     });
     
-    // Marca o livro como indisponível para empréstimo
+    // Atualiza a disponibilidade do livro
     const book = await this.booksRepository.findOne({ where: { id: dto.book_id } });
     if (book) {
       book.availableForLoan = false;
@@ -31,6 +35,10 @@ export class LoansService {
     return this.loansRepository.save(loan);
   }
 
+  /**
+   * Lista empréstimos onde o usuário é o dono do livro
+   * Retorna livros que o usuário emprestou para outros
+   */
   async findAll(userId: number, query: any = {}): Promise<{
     data: Loan[];
     total: number;
@@ -39,8 +47,7 @@ export class LoansService {
   }> {
     const { page = 1, limit = 10, returnedOnly = false } = query;
 
-    // Mostrar apenas empréstimos onde o usuário é o DONO do livro (lent_by)
-    // Ou seja, livros que ELE emprestou para outros
+    // Filtra empréstimos onde o usuário é o proprietário do livro
     const qb = this.loansRepository
       .createQueryBuilder('loan')
       .leftJoinAndSelect('loan.lentBy', 'lentBy')
@@ -65,7 +72,10 @@ export class LoansService {
     };
   }
 
-  // Novo método para buscar livros que o usuário PEGOU emprestado (mutuários)
+  /**
+   * Lista livros que o usuário pegou emprestado de outros
+   * Retorna empréstimos onde o usuário é o mutuário
+   */
   async findBorrowed(userId: number, query: any = {}): Promise<{
     data: Loan[];
     total: number;
@@ -74,8 +84,7 @@ export class LoansService {
   }> {
     const { page = 1, limit = 10, returnedOnly = false } = query;
 
-    // Mostrar apenas empréstimos onde o usuário é o MUTUÁRIO (borrowed_from)
-    // Ou seja, livros que ELE pegou emprestado de outros
+    // Filtra empréstimos onde o usuário pegou o livro emprestado
     const qb = this.loansRepository
       .createQueryBuilder('loan')
       .leftJoinAndSelect('loan.lentBy', 'lentBy')
@@ -125,12 +134,16 @@ export class LoansService {
     return this.loansRepository.save(loan);
   }
 
+  /**
+   * Registra a devolução de um livro emprestado
+   * Atualiza o status e libera o livro para novos empréstimos
+   */
   async returnLoan(userId: number, id: number): Promise<Loan> {
     const loan = await this.findOne(userId, id);
     loan.isReturned = true;
     loan.returnDate = new Date();
     
-    // Marca o livro como disponível para empréstimo novamente
+    // Libera o livro para novos empréstimos
     const book = await this.booksRepository.findOne({ where: { id: loan.book_id } });
     if (book) {
       book.availableForLoan = true;

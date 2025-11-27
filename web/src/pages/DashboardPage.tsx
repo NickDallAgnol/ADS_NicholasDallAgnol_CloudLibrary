@@ -45,7 +45,7 @@ export function DashboardPage() {
       const res = await api.get<Stats>('/books/stats/overview');
       setStats(res.data);
     } catch (err) {
-      console.error(err);
+
       toast.error('Erro ao carregar estatísticas');
     } finally {
       setLoading(false);
@@ -57,7 +57,7 @@ export function DashboardPage() {
       const res = await api.get('/books');
       setBooks(res.data.data || res.data || []);
     } catch (err) {
-      console.error(err);
+
     }
   }
 
@@ -71,7 +71,7 @@ export function DashboardPage() {
       
       setLoanStats({ emprestados, pegueiEmprestado: 0 });
     } catch (err) {
-      console.error(err);
+
     }
   }
 

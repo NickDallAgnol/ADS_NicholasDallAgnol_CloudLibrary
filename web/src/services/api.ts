@@ -1,14 +1,22 @@
 // src/services/api.ts
 import axios from 'axios';
 
-// Usar variável de ambiente ou fallback para localhost
+/**
+ * Configuração do cliente HTTP
+ * Gerencia autenticação e interceptação de requisições
+ */
+
+// Usa a URL da API do ambiente ou localhost como fallback
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const api = axios.create({
   baseURL: API_URL,
 });
 
-// Interceptor para adicionar token nas requisições
+/**
+ * Interceptor de requisições
+ * Adiciona automaticamente o token JWT no header Authorization
+ */
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,11 +25,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para lidar com erros de autenticação
+/**
+ * Interceptor de respostas
+ * Trata automaticamente erros de autenticação (401)
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Se receber 401 (Unauthorized), remover token e redirecionar para login
+    // Token inválido ou expirado - desloga o usuário
     if (error.response?.status === 401) {
       const token = localStorage.getItem('token');
       if (token) {

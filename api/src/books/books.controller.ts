@@ -19,14 +19,19 @@ import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt/jwt-auth.guard';
 
+/**
+ * Controller de livros
+ * Gerencia CRUD de livros, estatísticas e exportação
+ */
 @Controller('books')
-@UseGuards(JwtAuthGuard) // garante que só usuários autenticados acessem
+@UseGuards(JwtAuthGuard)
 export class BooksController {
   constructor(
     private readonly booksService: BooksService,
     private readonly booksExportService: BooksExportService,
-  ) {}
+  }
 
+  // Exporta acervo em formato PDF
   @Get('export/pdf')
   async exportPdf(
     @Request() req: any,
@@ -35,6 +40,7 @@ export class BooksController {
     await this.booksExportService.exportToPdf(req.user.id, res);
   }
 
+  // Exporta acervo em formato CSV
   @Get('export/csv')
   async exportCsv(
     @Request() req: any,
@@ -55,7 +61,6 @@ export class BooksController {
 
   @Get()
   findAll(@Request() req: any, @Query() query: any) {
-    console.log('📨 Query params recebidos:', query);
     return this.booksService.findAll(req.user.id, query);
   }
 

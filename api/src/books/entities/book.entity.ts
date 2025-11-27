@@ -7,12 +7,19 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
+/**
+ * Enum de status de leitura
+ */
 export enum BookStatus {
-  TO_READ = 'TO_READ',
-  READING = 'READING',
-  READ = 'READ',
+  TO_READ = 'TO_READ',   // Para ler
+  READING = 'READING',   // Lendo
+  READ = 'READ',         // Lido
 }
 
+/**
+ * Entidade de livros
+ * Representa um livro no acervo pessoal do usuário
+ */
 @Entity('books')
 export class Book {
   @PrimaryGeneratedColumn()
@@ -43,6 +50,7 @@ export class Book {
   @Column({ type: 'boolean', default: true, name: 'available_for_loan' })
   availableForLoan!: boolean;
 
+  // Relação com o proprietário do livro
   @ManyToOne(() => User, (user) => user.books, {
     onDelete: 'CASCADE',
     eager: false,

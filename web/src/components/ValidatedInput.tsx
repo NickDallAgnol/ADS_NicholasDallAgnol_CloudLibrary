@@ -8,6 +8,10 @@ interface ValidatedInputProps extends InputHTMLAttributes<HTMLInputElement> {
   showValidIcon?: boolean;
 }
 
+/**
+ * Input com validação visual
+ * Exibe feedback de erro/sucesso em tempo real
+ */
 export function ValidatedInput({
   label,
   error,

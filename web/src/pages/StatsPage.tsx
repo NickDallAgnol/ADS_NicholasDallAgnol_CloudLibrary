@@ -31,7 +31,7 @@ export function StatsPage() {
         const res = await api.get<Stats>('/books/stats');
         setStats(res.data);
       } catch (err) {
-        console.error(err);
+
         toast.error('Erro ao carregar estatísticas');
       }
     }

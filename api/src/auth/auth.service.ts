@@ -14,12 +14,18 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * Registra um novo usuário no sistema
+   * Valida se o email já existe e criptografa a senha
+   */
   async register(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
+    // Verifica se já existe um usuário com este email
     const existingUser = await this.usersService.findByEmail(createUserDto.email);
     if (existingUser) {
       throw new ConflictException('O email informado já está em uso.');
     }
 
+    // Criptografa a senha antes de salvar no banco
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const user = await this.usersService.create({
@@ -31,6 +37,10 @@ export class AuthService {
     return result;
   }
 
+  /**
+   * Autentica um usuário e retorna um token JWT
+   * Valida credenciais e gera token de acesso
+   */
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByEmail(loginDto.email);
 
@@ -38,12 +48,14 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    // Compara a senha fornecida com o hash armazenado
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    // Gera o token JWT com os dados do usuário
     const payload = { sub: user.id, email: user.email, name: user.name };
     const access_token = this.jwtService.sign(payload);
 

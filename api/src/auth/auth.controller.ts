@@ -13,6 +13,10 @@ import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Request as ExpressRequest } from 'express';
 
+/**
+ * Controller de autenticação
+ * Gerencia registro, login e perfil de usuários
+ */
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -35,7 +39,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Request() req: ExpressRequest) {
-    // Buscar dados atualizados do banco ao invés de usar o token
+    // Retorna os dados atualizados do usuário autenticado
     const userId = (req.user as any).id;
     return this.authService.getUserById(userId);
   }

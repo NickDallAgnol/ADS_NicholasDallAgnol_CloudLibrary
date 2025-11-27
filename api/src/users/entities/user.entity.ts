@@ -8,6 +8,10 @@ import {
 import { Book } from '../../books/entities/book.entity';
 import { Loan } from '../../loans/entities/loan.entity';
 
+/**
+ * Entidade de usuários
+ * Armazena dados do usuário e preferências de leitura
+ */
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -22,6 +26,7 @@ export class User {
   @Column()
   password!: string;
 
+  // Preferências pessoais de leitura
   @Column({ nullable: true, length: 200 })
   favoriteBook?: string;
 
