@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Check, ArrowUpFromLine, ArrowDownToLine, BookOpen, User, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Check, ArrowUpFromLine, ArrowDownToLine, BookOpen, User, CheckCircle, X } from "lucide-react";
 import { api } from "../services/api";
 import toast from "react-hot-toast";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -368,9 +368,10 @@ export default function LoansPage() {
                     setSelectedBookId("");
                     setSelectedUserId("");
                   }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition font-semibold"
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition font-semibold flex items-center justify-center gap-2"
                 >
-                  ❌ Cancelar
+                  <X className="w-4 h-4" />
+                  Cancelar
                 </button>
               </div>
             </form>

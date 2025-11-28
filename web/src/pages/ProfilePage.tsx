@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
-import { BarChart3, Library, BookOpen, CheckCircle, Clock, ArrowUpFromLine, ArrowDownToLine, Calendar, User, BookMarked, Lock } from 'lucide-react';
+import { BarChart3, Library, BookOpen, CheckCircle, Clock, ArrowUpFromLine, ArrowDownToLine, Calendar, User, BookMarked, Lock, Save, X, MessageSquare } from 'lucide-react';
 
 interface User {
   id: number;
@@ -43,50 +43,49 @@ export function ProfilePage() {
   const [yearlyReadingGoal, setYearlyReadingGoal] = useState(0);
   const [bio, setBio] = useState('');
 
+  // Função reutilizável para carregar todos os dados
+  const fetchAllData = async () => {
+    try {
+      // Buscar todos os dados em paralelo
+      const [userRes, statsRes, loansRes, borrowedRes] = await Promise.all([
+        api.get<User>('/auth/me'),
+        api.get<Stats>('/books/stats/overview'),
+        api.get('/loans'),
+        api.get('/loans/borrowed/me'),
+      ]);
+
+      // Atualizar dados do usuário
+      setUser(userRes.data);
+      setName(userRes.data.name);
+      setEmail(userRes.data.email);
+      setFavoriteBook(userRes.data.favoriteBook || '');
+      setFavoriteAuthor(userRes.data.favoriteAuthor || '');
+      setFavoriteGenre(userRes.data.favoriteGenre || '');
+      setYearlyReadingGoal(userRes.data.yearlyReadingGoal || 0);
+      setBio(userRes.data.bio || '');
+
+      // Atualizar estatísticas de livros
+      setStats(statsRes.data);
+
+      // Calcular estatísticas de empréstimos
+      const loansData = loansRes.data.data || loansRes.data || [];
+      const borrowedData = borrowedRes.data.data || borrowedRes.data || [];
+      const lentByMe = Array.isArray(loansData) 
+        ? loansData.filter((loan: any) => !loan.isReturned).length 
+        : 0;
+      const borrowedByMe = Array.isArray(borrowedData)
+        ? borrowedData.filter((loan: any) => !loan.isReturned).length
+        : 0;
+      
+      setLoanStats({ lentByMe, borrowedByMe });
+    } catch (err) {
+      toast.error('Erro ao carregar dados do perfil.');
+      setLoanStats({ lentByMe: 0, borrowedByMe: 0 });
+    }
+  };
+
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await api.get<User>('/auth/me');
-        setUser(res.data);
-        setName(res.data.name);
-        setEmail(res.data.email);
-        setFavoriteBook(res.data.favoriteBook || '');
-        setFavoriteAuthor(res.data.favoriteAuthor || '');
-        setFavoriteGenre(res.data.favoriteGenre || '');
-        setYearlyReadingGoal(res.data.yearlyReadingGoal || 0);
-        setBio(res.data.bio || '');
-      } catch (err) {
-
-        toast.error('Erro ao carregar perfil.');
-      }
-    }
-
-    async function fetchStats() {
-      try {
-        const res = await api.get<Stats>('/books/stats/overview');
-        setStats(res.data);
-      } catch (err) {
-
-      }
-    }
-
-    async function fetchLoanStats() {
-      try {
-        const res = await api.get('/loans');
-        const loansData = res.data.data || res.data || [];
-        const lentByMe = Array.isArray(loansData) 
-          ? loansData.filter((loan: any) => !loan.isReturned).length 
-          : 0;
-        setLoanStats({ lentByMe, borrowedByMe: 0 });
-      } catch (err) {
-
-        setLoanStats({ lentByMe: 0, borrowedByMe: 0 });
-      }
-    }
-
-    fetchUser();
-    fetchStats();
-    fetchLoanStats();
+    fetchAllData();
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -102,7 +101,7 @@ export function ProfilePage() {
     }
 
     try {
-      const res = await api.put<User>('/users/me', {
+      await api.put<User>('/users/me', {
         name: name.trim(),
         email: email.trim(),
         password: password || undefined,
@@ -113,20 +112,12 @@ export function ProfilePage() {
         bio: bio?.trim() || undefined,
       });
       
-      // Atualizar o estado com os dados salvos
-      const updatedUser = res.data;
-      setUser(updatedUser);
-      setName(updatedUser.name);
-      setEmail(updatedUser.email);
-      setFavoriteBook(updatedUser.favoriteBook || '');
-      setFavoriteAuthor(updatedUser.favoriteAuthor || '');
-      setFavoriteGenre(updatedUser.favoriteGenre || '');
-      setYearlyReadingGoal(updatedUser.yearlyReadingGoal || 0);
-      setBio(updatedUser.bio || '');
-      
       setIsEditing(false);
       setPassword('');
       toast.success('Perfil atualizado com sucesso!');
+      
+      // Recarregar todos os dados atualizados
+      await fetchAllData();
     } catch (err: any) {
 
       const errorMessage = err?.response?.data?.message || 'Erro ao atualizar perfil.';
@@ -148,7 +139,7 @@ export function ProfilePage() {
             <h1 className="text-3xl font-bold flex items-center gap-3 mb-2">
               {user.name}
             </h1>
-            <p className="text-gray-600 mb-1">✉️ {user.email}</p>
+            <p className="text-gray-600 mb-1"> {user.email}</p>
             <div className="flex gap-2 items-center">
               <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold flex items-center gap-1">
                 <User className="w-3 h-3" />
@@ -310,9 +301,10 @@ export function ProfilePage() {
                 setBio(user.bio || '');
                 setPassword('');
               }}
-              className="text-gray-500 hover:text-gray-700 font-semibold"
+              className="text-gray-500 hover:text-gray-700 font-semibold flex items-center gap-2"
             >
-              ❌ Cancelar
+              <X className="w-4 h-4" />
+              Cancelar
             </button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -396,7 +388,7 @@ export function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    🎭 Gênero Preferido
+                     Gênero Preferido
                   </label>
                   <input
                     type="text"
@@ -408,7 +400,7 @@ export function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    🎯 Meta de Leitura Anual
+                     Meta de Leitura Anual
                   </label>
                   <input
                     type="number"
@@ -421,8 +413,9 @@ export function ProfilePage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  💭 Sobre Mim
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Sobre Mim
                 </label>
                 <textarea
                   value={bio}
@@ -437,9 +430,10 @@ export function ProfilePage() {
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold transition"
+                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold transition flex items-center justify-center gap-2"
               >
-                💾 Salvar Alterações
+                <Save className="w-5 h-5" />
+                Salvar Alterações
               </button>
               <button
                 type="button"

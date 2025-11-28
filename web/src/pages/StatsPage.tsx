@@ -79,7 +79,10 @@ export function StatsPage() {
 
   return (
     <div className={`max-w-5xl mx-auto p-6 ${darkMode ? 'bg-gray-900 text-white' : ''}`}>
-      <h1 className="text-2xl font-bold mb-6">📊 Estatísticas</h1>
+      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <BarChart3 className="w-6 h-6" />
+        Estatísticas
+      </h1>
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">

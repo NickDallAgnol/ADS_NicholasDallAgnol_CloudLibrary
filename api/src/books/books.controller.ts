@@ -29,7 +29,7 @@ export class BooksController {
   constructor(
     private readonly booksService: BooksService,
     private readonly booksExportService: BooksExportService,
-  }
+  ) {}
 
   // Exporta acervo em formato PDF
   @Get('export/pdf')

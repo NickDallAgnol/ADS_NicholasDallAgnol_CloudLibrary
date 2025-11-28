@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { BookOpen, TrendingUp, CheckCircle, Clock, Upload, BarChart3 } from 'lucide-react';
+import { BookOpen, TrendingUp, CheckCircle, Clock, Upload, BarChart3, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -34,51 +34,44 @@ interface LoanStats {
 }
 
 export function DashboardPage() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [loanStats, setLoanStats] = useState<LoanStats>({ emprestados: 0, pegueiEmprestado: 0 });
 
-  async function fetchStats() {
+  // Função unificada para buscar todos os dados
+  async function fetchAllData() {
     try {
       setLoading(true);
-      const res = await api.get<Stats>('/books/stats/overview');
-      setStats(res.data);
-    } catch (err) {
+      
+      // Buscar todos os dados em paralelo
+      const [statsRes, booksRes, loansRes, borrowedRes] = await Promise.all([
+        api.get<Stats>('/books/stats/overview'),
+        api.get('/books'),
+        api.get('/loans'),
+        api.get('/loans/borrowed/me'),
+      ]);
 
-      toast.error('Erro ao carregar estatísticas');
+      // Atualizar estados com os dados recebidos
+      setStats(statsRes.data);
+      setBooks(booksRes.data.data || booksRes.data || []);
+      
+      // Calcular estatísticas de empréstimos
+      const loans = loansRes.data.data || loansRes.data || [];
+      const borrowed = borrowedRes.data.data || borrowedRes.data || [];
+      const emprestados = loans.filter((l: any) => !l.isReturned).length;
+      const pegueiEmprestado = borrowed.filter((l: any) => !l.isReturned).length;
+      
+      setLoanStats({ emprestados, pegueiEmprestado });
+    } catch (err) {
+      toast.error('Erro ao carregar dados do dashboard');
     } finally {
       setLoading(false);
     }
   }
 
-  async function fetchBooks() {
-    try {
-      const res = await api.get('/books');
-      setBooks(res.data.data || res.data || []);
-    } catch (err) {
-
-    }
-  }
-
-  async function fetchLoanStats() {
-    try {
-      const res = await api.get('/loans');
-      const loans = res.data.data || res.data || [];
-      
-      // Contar empréstimos onde o usuário é o dono do livro (lent_by)
-      const emprestados = loans.filter((l: any) => !l.isReturned).length;
-      
-      setLoanStats({ emprestados, pegueiEmprestado: 0 });
-    } catch (err) {
-
-    }
-  }
-
   useEffect(() => {
-    fetchStats();
-    fetchBooks();
-    fetchLoanStats();
+    fetchAllData();
   }, []);
 
   const chartData = stats
@@ -243,6 +236,30 @@ export function DashboardPage() {
                     className="text-orange-700 hover:text-orange-900 text-sm font-semibold flex items-center gap-1"
                   >
                     Gerenciar empréstimos →
+                  </Link>
+                </div>
+
+                {/* Livros que Você Pegou Emprestado (Mutuários) */}
+                <div className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                        <Download size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-purple-800">Mutuários</h3>
+                        <p className="text-sm text-purple-600">Livros que você pegou emprestado</p>
+                      </div>
+                    </div>
+                    <span className="text-3xl font-bold text-purple-700">
+                      {loanStats.pegueiEmprestado}
+                    </span>
+                  </div>
+                  <Link 
+                    to="/loans" 
+                    className="text-purple-700 hover:text-purple-900 text-sm font-semibold flex items-center gap-1"
+                  >
+                    Ver meus empréstimos →
                   </Link>
                 </div>
 

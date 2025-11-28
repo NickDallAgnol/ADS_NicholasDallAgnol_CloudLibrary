@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "./Header";
+import { Library } from "lucide-react";
 
 /**
  * Layout principal da aplicação
@@ -25,7 +26,10 @@ export default function Layout() {
               © {new Date().getFullYear()} <span className="font-semibold text-blue-600">Cloud Library</span> — Todos os direitos reservados
             </p>
             <div className="flex gap-4 text-sm text-gray-500">
-              <span>📚 Gerencie sua biblioteca pessoal</span>
+              <span className="flex items-center gap-2">
+                <Library className="w-4 h-4" />
+                Gerencie sua biblioteca pessoal
+              </span>
             </div>
           </div>
         </div>
